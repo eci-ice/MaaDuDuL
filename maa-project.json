@@ -35,7 +35,7 @@
     },
     "maafw": {
         "channel": "stable",
-        "version": "5.14.2"
+        "version": "5.14.3"
     },
     "network": {
         "mode": "auto"
@@ -107,7 +107,7 @@
         },
         "android": {
             "appRepository": "Aliothmoon/MaaFwApp",
-            "appRef": "3ff2d7ee1df165ce2fe54758c15e49165768dc72",
+            "appRef": "de65f7a43fc6a110706f44d756a0bf82b5c296d7",
             "agentCoreRepository": "Aliothmoon/MaaAgentCoreAndroid",
             "agentCoreTag": "3.13.15-maafw5.14.2",
             "agentPython": "3.13.15",
