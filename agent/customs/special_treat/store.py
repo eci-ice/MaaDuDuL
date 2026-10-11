@@ -27,6 +27,8 @@ class Gift(CustomAction):
             context：MaaFW 上下文对象
             argv：自定义动作参数，支持以下参数名：
                 - gift/g：礼包名称
+                - type/t：free 表示领取，其他值表示购买，仅影响日志
+                - index/i：同名礼包从左到右的序号，从 0 开始，默认 0
 
         Returns:
             bool：领取操作是否成功
@@ -36,6 +38,9 @@ class Gift(CustomAction):
             args = ParamAnalyzer(argv)
             gift = args.get(["gift", "g"])
             gift_type = args.get(["type", "t"], "free")
+            gift_index = args.get(["index", "i"], 0)
+            if type(gift_index) is not int or gift_index < 0:
+                raise ValueError("index/i 必须是从 0 开始的整数")
 
             if gift_type == "free":
                 Prompter.log(f"领取{gift}")
@@ -46,7 +51,17 @@ class Gift(CustomAction):
             Tasker(context).run(
                 "每日采购_购买礼包开始",
                 {
-                    "每日采购_选中礼包": {"expected": gift},
+                    # 每次重设序号，避免后续礼包沿用上一次的覆盖值。
+                    "每日采购_选中礼包": {
+                        "recognition": {
+                            "type": "OCR",
+                            "param": {
+                                "expected": gift,
+                                "order_by": "Horizontal",
+                                "index": gift_index,
+                            },
+                        },
+                    },
                 },
             )
 

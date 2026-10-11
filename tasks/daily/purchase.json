@@ -182,7 +182,8 @@
 				{
 					"name": "Yes",
 					"option": [
-						"每日采购-兔子代币-周期检查"
+						"每日采购-兔子代币-周期检查",
+						"每日采购-兔子代币-购买"
 					],
 					"label": "$Yes"
 				},
@@ -194,6 +195,31 @@
 						}
 					},
 					"label": "$No"
+				}
+			]
+		},
+		"每日采购-兔子代币-购买": {
+			"type": "switch",
+			"label": "$购买兔子代币（300水晶叶）",
+			"default_case": "No",
+			"cases": [
+				{
+					"name": "No",
+					"label": "$No",
+					"pipeline_override": {
+						"每日采购_购买付费兔子代币": {
+							"enabled": false
+						}
+					}
+				},
+				{
+					"name": "Yes",
+					"label": "$Yes",
+					"pipeline_override": {
+						"每日采购_购买付费兔子代币": {
+							"enabled": true
+						}
+					}
 				}
 			]
 		},

@@ -3,17 +3,17 @@
         "$__mpe_code": {
             "prefix": "每日采购",
             "coordinateMode": "absolute-v1",
-            "lastSyncTime": 1790875723042,
+            "lastSyncTime": 1791718940557,
             "isModifiedExternally": false,
             "isDeleted": false,
             "filePath": "D:\\_Projects\\MaaDuDuL\\resource\\base\\pipeline\\日常任务\\每日采购.json",
             "savedViewport": {
-                "x": -7478,
-                "y": -2426,
-                "zoom": 1.52
+                "x": -5665,
+                "y": 164,
+                "zoom": 1.06
             },
             "filename": "每日采购",
-            "version": "v2.0.6"
+            "version": "v2.1.0"
         }
     },
     "$__mpe_external_返回主界面_每日采购": {
@@ -127,8 +127,8 @@
         ],
         "$__mpe_code": {
             "position": {
-                "x": 5666,
-                "y": 348
+                "x": 5665,
+                "y": 373
             }
         }
     },
@@ -170,8 +170,8 @@
         ],
         "$__mpe_code": {
             "position": {
-                "x": 6197,
-                "y": 188
+                "x": 6466,
+                "y": 189
             }
         }
     },
@@ -196,8 +196,8 @@
         ],
         "$__mpe_code": {
             "position": {
-                "x": 6459,
-                "y": 187
+                "x": 6728,
+                "y": 188
             }
         }
     },
@@ -1020,8 +1020,8 @@
         },
         "$__mpe_code": {
             "position": {
-                "x": 4407,
-                "y": 32
+                "x": 4408,
+                "y": 67
             }
         }
     },
@@ -1150,6 +1150,27 @@
             "position": {
                 "x": 7081,
                 "y": 2085
+            }
+        }
+    },
+    "每日采购_购买付费兔子代币": {
+        "enabled": false,
+        "pre_delay": 0,
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "gift",
+                "custom_action_param": "g=兔子代币&i=1&t=paid"
+            }
+        },
+        "post_delay": 0,
+        "next": [
+            "每日采购_兔子代币周期记录"
+        ],
+        "$__mpe_code": {
+            "position": {
+                "x": 6207,
+                "y": 313
             }
         }
     },
@@ -1847,11 +1868,12 @@
             "type": "Custom",
             "param": {
                 "custom_action": "gift",
-                "custom_action_param": "g=兔子代币"
+                "custom_action_param": "g=兔子代币&i=0"
             }
         },
         "post_delay": 0,
         "next": [
+            "每日采购_购买付费兔子代币",
             "每日采购_兔子代币周期记录"
         ],
         "$__mpe_code": {
