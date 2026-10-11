@@ -3,17 +3,17 @@
         "$__mpe_code": {
             "prefix": "返回主界面",
             "coordinateMode": "absolute-v1",
-            "lastSyncTime": 1789823452774,
+            "lastSyncTime": 1791553483172,
             "isModifiedExternally": false,
             "isDeleted": false,
-            "filePath": "D:\\_Projects\\MaaDuDuL\\assets\\resource\\base\\pipeline\\通用\\回到主界面.json",
+            "filePath": "D:\\_Projects\\MaaDuDuL\\resource\\base\\pipeline\\通用\\回到主界面.json",
             "savedViewport": {
-                "x": -4937,
-                "y": -170,
-                "zoom": 1.74
+                "x": -2511,
+                "y": 39,
+                "zoom": 1.15
             },
             "filename": "回到主界面",
-            "version": "v1.10.1"
+            "version": "v2.1.0_beta_2"
         }
     },
     "返回主界面_使徒": {
@@ -122,7 +122,8 @@
                     "取消",
                     "退出",
                     "点击屏幕继续",
-                    "兼职结束"
+                    "兼职结束",
+                    "跳过"
                 ],
                 "order_by": "Vertical",
                 "index": -1

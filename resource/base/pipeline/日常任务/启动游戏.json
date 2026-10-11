@@ -3,17 +3,17 @@
         "$__mpe_code": {
             "prefix": "启动游戏",
             "coordinateMode": "absolute-v1",
-            "lastSyncTime": 1790251005999,
+            "lastSyncTime": 1791553302088,
             "isModifiedExternally": false,
             "isDeleted": false,
             "filePath": "D:\\_Projects\\MaaDuDuL\\resource\\base\\pipeline\\日常任务\\启动游戏.json",
             "savedViewport": {
-                "x": -1888,
-                "y": -322,
-                "zoom": 1.74
+                "x": 192,
+                "y": 47,
+                "zoom": 0.66
             },
             "filename": "启动游戏",
-            "version": "v1.10.1"
+            "version": "v2.1.0_beta_2"
         }
     },
     "启动游戏_关闭公告": {
@@ -103,6 +103,7 @@
             "[JumpBack]启动游戏_无可领取的奖励",
             "[JumpBack]启动游戏_领取礼物",
             "[JumpBack]启动游戏_点击屏幕继续",
+            "[JumpBack]启动游戏_跳过",
             "[JumpBack]启动游戏_关闭面板",
             "[JumpBack]启动游戏_更新游戏",
             "[JumpBack]启动游戏_更新结束",
@@ -161,6 +162,7 @@
             "[JumpBack]启动游戏_无可领取的奖励",
             "[JumpBack]启动游戏_领取礼物",
             "[JumpBack]启动游戏_点击屏幕继续",
+            "[JumpBack]启动游戏_跳过",
             "[JumpBack]启动游戏_关闭面板",
             "[JumpBack]启动游戏_闲时捏脸"
         ],
@@ -325,8 +327,8 @@
         },
         "$__mpe_code": {
             "position": {
-                "x": 1217,
-                "y": 920
+                "x": 1220,
+                "y": 915
             }
         }
     },
@@ -446,6 +448,31 @@
             "position": {
                 "x": 1219,
                 "y": 631
+            }
+        }
+    },
+    "启动游戏_跳过": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    1075,
+                    5,
+                    200,
+                    92
+                ],
+                "expected": [
+                    "跳过"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click"
+        },
+        "$__mpe_code": {
+            "position": {
+                "x": 1487,
+                "y": 907
             }
         }
     }
