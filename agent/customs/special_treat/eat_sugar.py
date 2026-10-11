@@ -368,7 +368,7 @@ class SelectHeartType(CustomAction):
     """选择心形关卡类型的自定义动作。
 
     根据参数指定的心形关卡类型，点击对应的关卡入口坐标。
-    支持的心形关卡类型：龙族、精灵、幽灵、仙灵、魔女、自然灵、兽人。
+    支持的心形关卡类型：龙族、精灵、幽灵、仙灵、魔女、自然灵、兽人、秘灵。
     """
 
     def run(self, context: Context, argv: CustomAction.RunArg) -> bool:
@@ -404,6 +404,8 @@ class SelectHeartType(CustomAction):
                 target = [381, 463]
             elif level == "兽人":
                 target = [868, 488]
+            elif level == "秘灵":
+                target = [642, 490]
             else:
                 Prompter.error("无效的心形关卡类型")
                 return False

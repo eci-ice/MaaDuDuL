@@ -124,6 +124,15 @@
 						}
 					},
 					"label": "$兽人"
+				},
+				{
+					"name": "秘灵",
+					"pipeline_override": {
+						"清红糖_选择心形种族": {
+							"custom_action_param": "t=秘灵"
+						}
+					},
+					"label": "$秘灵"
 				}
 			]
 		},
