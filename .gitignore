@@ -483,3 +483,4 @@ deps/
 
 # Local development state
 /.local/
+.*.mddl-management.lock

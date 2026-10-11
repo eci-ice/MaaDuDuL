@@ -5,13 +5,16 @@ GUI binaries, configuration, logs and screenshots are never cleaned here.
 """
 
 import argparse
+import errno
 import hashlib
 import json
 import os
 import platform
+import re
 import subprocess
 import sys
 import tempfile
+from contextlib import contextmanager
 from datetime import UTC, datetime
 from pathlib import Path
 
@@ -20,6 +23,108 @@ STATE = ".mddl-dev.json"
 LOCK = ".mddl-dev.lock"
 TREES = ("resource", "tasks", "locales", "agent")
 EXCLUDED = {"__pycache__", "config", "debug", "logs", ".git"}
+
+
+class WorkspaceBusy(ValueError):
+    pass
+
+
+def lock_descriptor(descriptor: int) -> None:
+    """Non-blocking OS lock; closing the descriptor (even on process death) releases it."""
+    try:
+        if sys.platform == "win32":
+            import msvcrt
+
+            msvcrt.locking(descriptor, msvcrt.LK_NBLCK, 1)
+        else:
+            import fcntl
+
+            fcntl.flock(descriptor, fcntl.LOCK_EX | fcntl.LOCK_NB)
+    except OSError as error:
+        if error.errno in (errno.EACCES, errno.EAGAIN, errno.EDEADLK):
+            raise WorkspaceBusy("Workspace busy: another management command is running.") from None
+        raise
+
+
+@contextmanager
+def management_lock(workspace: Path, *, inspect_only: bool = False):
+    # Keep the inode/path stable across installation's directory swap. Never unlink it.
+    path = safe_path(workspace.parent, f".{workspace.name}.mddl-management.lock")
+    try:
+        descriptor = os.open(path, os.O_RDWR | (0 if inspect_only else os.O_CREAT), 0o600)
+    except FileNotFoundError:
+        if not inspect_only:
+            raise
+        yield
+        return
+    try:
+        lock_descriptor(descriptor)
+        yield
+    finally:
+        os.close(descriptor)
+
+
+def legacy_lock_owner(workspace: Path) -> bool:
+    """Return whether a legacy marker exists; refuse live or unverifiable owners."""
+    path = safe_path(workspace, LOCK)
+    try:
+        value = path.read_text(encoding="utf-8").strip()
+    except FileNotFoundError:
+        return False
+    if not value.isascii() or not value.isdecimal() or not 0 < int(value) <= 0xFFFFFFFF:
+        raise WorkspaceBusy(f"Unverifiable legacy lock: {path}. Verify no old management command/GUI/Agent "
+                            "is running before removing it manually.")
+    owner = int(value)
+    if sys.platform == "win32":
+        # os.kill(pid, 0) is not a safe process probe on Windows.
+        result = subprocess.run(
+            ["powershell", "-NoProfile", "-NonInteractive", "-Command",
+             f"[bool](Get-Process -Id {owner} -ErrorAction SilentlyContinue)"],
+            capture_output=True, text=True, check=False, creationflags=subprocess.CREATE_NO_WINDOW,
+        )
+        if result.returncode or result.stdout.strip() not in ("True", "False"):
+            raise WorkspaceBusy(f"Cannot inspect legacy lock owner PID {owner}; cancelled.")
+        running = result.stdout.strip() == "True"
+    else:
+        try:
+            os.kill(owner, 0)
+            running = True
+        except ProcessLookupError:
+            running = False
+        except PermissionError:
+            running = True
+    if running:
+        raise WorkspaceBusy(f"Workspace busy: legacy lock owner PID {owner} is still running ({path}).")
+    return True
+
+
+@contextmanager
+def workspace_lock(workspace: Path):
+    with management_lock(workspace):
+        stale = legacy_lock_owner(workspace)
+        if workspace.exists() and any(path.name != LOCK for path in workspace.iterdir()):
+            ensure_gui_stopped(executable(workspace))
+        ensure_agent_stopped(workspace)
+        lock = safe_path(workspace, LOCK)
+        if stale:
+            lock.unlink()
+            print(f"Recovered stale workspace lock: {lock}")
+        # Retain a PID marker so older launchers also refuse concurrent access.
+        with lock.open("x", encoding="utf-8") as stream:
+            stream.write(str(os.getpid()))
+        try:
+            yield
+        finally:
+            lock.unlink(missing_ok=True)
+
+
+def workspace_busy(workspace: Path) -> bool:
+    try:
+        with management_lock(workspace, inspect_only=True):
+            legacy_lock_owner(workspace)
+    except WorkspaceBusy:
+        return True
+    return False
 
 
 def runtime_platform() -> str:
@@ -167,6 +272,41 @@ def ensure_gui_stopped(gui: Path) -> None:
         raise ValueError("MFAA is running. Close the GUI and its Agent before preparing or starting another session.")
 
 
+def ensure_agent_stopped(workspace: Path) -> None:
+    """A killed launcher/GUI can leave its Python Agent behind."""
+    if sys.platform == "win32":
+        result = subprocess.run(
+            ["powershell", "-NoProfile", "-NonInteractive", "-Command",
+             "$ErrorActionPreference = 'Stop'; "
+             "@(Get-CimInstance Win32_Process | Where-Object Name -Match '^python.*' | "
+             "Select-Object ProcessId,CommandLine) | ConvertTo-Json -Compress"],
+            capture_output=True, text=True, check=False, creationflags=subprocess.CREATE_NO_WINDOW,
+        )
+        if result.returncode:
+            raise ValueError("Cannot inspect running Agent processes; cancelled.")
+        processes = json.loads(result.stdout.strip() or "[]")
+        if isinstance(processes, dict):
+            processes = [processes]
+        # CIM can return a missing command line for an unrelated elevated process
+        # or one exiting during enumeration. That is not evidence of a workspace
+        # Agent. Keep checking the remaining processes rather than blocking all
+        # development commands (or skipping a visible Agent later in the list).
+        commands = [command for item in processes if isinstance(command := item.get("CommandLine"), str) and command]
+    else:
+        result = subprocess.run(["ps", "-ax", "-o", "args="], capture_output=True, text=True, check=False)
+        if result.returncode:
+            raise ValueError("Cannot inspect running Agent processes; cancelled.")
+        commands = result.stdout.splitlines()
+    absolute = str(workspace / "agent" / "main.py").replace("\\", "/")
+    for command in commands:
+        normalized = command.replace("\\", "/")
+        if sys.platform == "win32":
+            normalized, absolute = normalized.casefold(), absolute.casefold()
+        # Relative paths have no inspectable cwd here: conservatively require exit.
+        if re.search(r'(?:^|[\s\"\'])(?:\./)?agent/main\.py(?:[\s\"\']|$)', normalized) or absolute in normalized:
+            raise ValueError("A workspace Agent may still be running. Close its GUI/Agent before continuing.")
+
+
 def prepare(workspace: Path) -> None:
     import jsonc
 
@@ -247,21 +387,10 @@ def main(arguments=None) -> int:
             raise ValueError("Inside this repository only MFAAvalonia is a permitted workspace.")
         if args.command == "status":
             ready = status(workspace)
-            print(f"Management lock: {safe_path(workspace, LOCK).exists()}")
+            print(f"Management lock: {workspace_busy(workspace)}")
             return 0 if ready else 1
         gui = executable(workspace)
-        ensure_gui_stopped(gui)
-        lock = safe_path(workspace, LOCK)
-        try:
-            descriptor = os.open(lock, os.O_CREAT | os.O_EXCL | os.O_WRONLY)
-        except FileExistsError:
-            raise ValueError(
-                f"Workspace busy: {lock}. Close the managed GUI first. "
-                "If interrupted, verify no GUI/Agent is running before removing this lock."
-            ) from None
-        try:
-            with os.fdopen(descriptor, "w") as stream:
-                stream.write(str(os.getpid()))
+        with workspace_lock(workspace):
             if args.command == "prepare":
                 prepare(workspace)
             else:
@@ -270,8 +399,6 @@ def main(arguments=None) -> int:
                 env = dict(os.environ, MDDL_DEV_MODE="1", MDDL_STATE_ROOT=str(workspace))
                 # Keep the lock until GUI exit; do not launch duplicate managed sessions.
                 return subprocess.run([str(gui)], cwd=workspace, env=env, check=False).returncode
-        finally:
-            lock.unlink(missing_ok=True)
         return 0
     except (OSError, ValueError) as error:
         print(f"Error: {error}", file=sys.stderr)

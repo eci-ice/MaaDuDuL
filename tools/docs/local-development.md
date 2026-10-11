@@ -20,7 +20,11 @@
 
 默认测试目录为仓库 `MFAAvalonia/`。可通过 `MDDL_MFAA_ROOT` 或 `--workspace` 指向仓库外已有 MFAA 安装，例如 `yarn dev:status --workspace D:/MaaTest`。只有显式执行 `yarn dev:install` 才下载或更新 GUI，prepare/start 不会触发安装。
 
-准备前先关闭 MFAA 及其 Agent。脚本检查 GUI 进程，管理命令之间使用工作区锁互斥；命令启动的 GUI 退出后才释放锁。若终端被强制终止，确认 GUI 和 Agent 均已退出后，手动删除测试目录内 `.mddl-dev.lock`。不要一边 prepare 一边从外部手动启动 GUI。
+准备前先关闭 MFAA 及其 Agent。prepare、start 和 install 共用操作系统文件锁，锁文件位于工作区的同级目录，名为 `.<工作区目录名>.mddl-management.lock`。正常退出或进程被强制终止后，系统会释放锁；文件本身保留，不表示工作区忙，也不要手动删除它。锁放在工作区外，安装替换目录时仍保持互斥。`dev:status` 检查实际占用状态，不再只检查文件是否存在。
+
+测试目录内仍保留 `.mddl-dev.lock` PID 标记以兼容旧启动脚本。下一次管理命令会在确认原进程已退出、GUI 和托管 Agent 均未运行后自动回收旧标记。PID 仍存在时会提示具体进程号；空白、损坏或无法验证的旧标记仍需确认没有管理命令、GUI、Agent 运行后手动删除。相对路径启动的 `agent/main.py` 无法仅凭命令行确定所属工作区，因此也会阻止管理操作；独立的 `agent/local_main.py` 不受此检查影响。不要一边 prepare/install 一边从外部手动启动 GUI。
+
+Windows 的 Agent 检查只匹配可读取的 Python 命令行；个别进程命令行为空时会跳过该进程，不会因此拦截整个工作区，也不会跳过其余 Agent 的检查。系统锁和旧 PID 占用检查仍然生效；进程查询本身失败时仍会报错。以其他权限运行、且命令行不可读的孤立 Agent 无法由此检查识别。
 
 ## 同步和数据保留
 

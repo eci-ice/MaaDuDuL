@@ -17,7 +17,17 @@ from urllib.error import HTTPError
 from urllib.parse import quote, urlsplit
 from urllib.request import Request, urlopen
 
-from mfaa import LOCK, ROOT, STATE, ensure_gui_stopped, executable, framework_version, runtime_platform, safe_path
+from mfaa import (
+    LOCK,
+    ROOT,
+    STATE,
+    ensure_gui_stopped,
+    executable,
+    framework_version,
+    runtime_platform,
+    safe_path,
+    workspace_lock,
+)
 
 
 def fetch(url):
@@ -195,17 +205,12 @@ def install(workspace: Path, framework_only: bool = False) -> None:
         if not workspace.is_dir():
             raise ValueError("Installation target is not a directory.")
         # Existing non-MFAA directories must never be adopted as installations.
-        if any(workspace.iterdir()):
+        if any(path.name != LOCK for path in workspace.iterdir()):
             ensure_gui_stopped(executable(workspace))
-        if safe_path(workspace, LOCK).exists():
-            raise ValueError("MFAA workspace is busy; close the managed GUI first.")
         for path in workspace.rglob("*"):
             safe_path(workspace, path.relative_to(workspace).as_posix())
     workspace.mkdir(parents=True, exist_ok=True)
-    lock = safe_path(workspace, LOCK)
-    descriptor = os.open(lock, os.O_CREAT | os.O_EXCL | os.O_WRONLY)
-    os.close(descriptor)
-    try:
+    with workspace_lock(workspace):
         asset = None if framework_only else resolve_asset(version, name)
         framework_system = "macos" if system == "osx" else system
         framework_arch = "aarch64" if arch == "arm64" else "x86_64"
@@ -291,8 +296,6 @@ def install(workspace: Path, framework_only: bool = False) -> None:
             (backup / LOCK).unlink(missing_ok=True)
             installed = f"MaaFramework {actual}" if framework_only else f"MFAA {version} + MaaFramework {actual}"
             print(f"Installed {installed}: {workspace}\nPrevious installation: {backup}\nNext: yarn dev:prepare")
-    finally:
-        lock.unlink(missing_ok=True)
 
 
 def main() -> int:
