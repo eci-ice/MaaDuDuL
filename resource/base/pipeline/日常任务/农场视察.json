@@ -2,16 +2,18 @@
     "$__mpe_config_农场视察": {
         "$__mpe_code": {
             "prefix": "农场视察",
-            "lastSyncTime": 1777213018732,
+            "coordinateMode": "absolute-v1",
+            "lastSyncTime": 1792070718734,
             "isModifiedExternally": false,
-            "filePath": "D:\\_Projects\\MaaDuDuL\\assets\\resource\\base\\pipeline\\日常任务\\农场视察.json",
+            "isDeleted": false,
+            "filePath": "D:\\_Projects\\MaaDuDuL\\resource\\base\\pipeline\\日常任务\\农场视察.json",
             "savedViewport": {
-                "x": -6327,
-                "y": 30,
-                "zoom": 1.84
+                "x": -3429,
+                "y": 174,
+                "zoom": 0.8
             },
             "filename": "农场视察",
-            "version": "v1.4.3"
+            "version": "v2.1.0"
         }
     },
     "$__mpe_external_返回主界面_农场视察": {
@@ -213,8 +215,8 @@
         ],
         "$__mpe_code": {
             "position": {
-                "x": 5071,
-                "y": 657
+                "x": 5073,
+                "y": 781
             }
         }
     },
@@ -442,8 +444,8 @@
         ],
         "$__mpe_code": {
             "position": {
-                "x": 5331,
-                "y": 390
+                "x": 5333,
+                "y": 479
             }
         }
     },
@@ -539,16 +541,20 @@
         "action": {
             "type": "Click"
         },
+        "timeout": 5000,
         "focus": {
             "Node.Recognition.Succeeded": "> 获取跑腿奖励并重新派遣"
         },
         "next": [
             "农场视察_获取派遣奖励"
         ],
+        "on_error": [
+            "农场视察_派遣跑腿结束"
+        ],
         "$__mpe_code": {
             "position": {
-                "x": 5069,
-                "y": 390
+                "x": 5074,
+                "y": 425
             }
         }
     },
@@ -570,7 +576,7 @@
         "action": {
             "type": "Click"
         },
-        "timeout": 2000,
+        "timeout": 5000,
         "next": [
             "农场视察_重新派遣",
             "农场视察_无跑腿奖励"
