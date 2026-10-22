@@ -44,7 +44,7 @@
         "displayName": "MaaDuDuL",
         "initialTemplate": "agent",
         "slug": "maa-dudul",
-        "version": "1.3.1",
+        "version": "1.4.0",
         "github": "https://github.com/kqcoxn/MaaDuDuL",
         "interfaceUnmanaged": true
     },
@@ -99,17 +99,17 @@
         "node": "22",
         "nodeMinimum": "22.13",
         "yarn": "1.22.22",
-        "cmp": "3.5.2",
+        "cmp": "3.7.3",
         "pythonRuntime": {
-            "windows": "3.13.14",
-            "standalone": "3.13.15",
-            "standaloneRelease": "20260901"
+            "windows": "3.13.17",
+            "standalone": "3.13.17",
+            "standaloneRelease": "20261021"
         },
         "android": {
             "appRepository": "Aliothmoon/MaaFwApp",
             "appRef": "de65f7a43fc6a110706f44d756a0bf82b5c296d7",
             "agentCoreRepository": "Aliothmoon/MaaAgentCoreAndroid",
-            "agentCoreTag": "3.13.15-maafw5.14.2",
+            "agentCoreTag": "3.13.15-maafw5.14.3",
             "agentPython": "3.13.15",
             "ndk": "28.2.13676358",
             "buildPython": "3.13",

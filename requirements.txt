@@ -4,7 +4,7 @@ maafw==5.14.3
     # via maa-dudul
 numpy==2.4.6 ; python_full_version < '3.12'
     # via maafw
-numpy==2.5.3 ; python_full_version >= '3.12'
+numpy==2.5.4 ; python_full_version >= '3.12'
     # via maafw
 strenum==0.4.15
     # via maafw

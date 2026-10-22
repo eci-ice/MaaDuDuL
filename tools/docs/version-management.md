@@ -57,4 +57,4 @@ Package Smoke 仅支持手动触发，日常提交和 PR 不执行打包 smoke�
 
 普通第三方 Node/Python 库依赖继续由 package.json、pyproject.toml 及各自锁文件管理，GitHub Actions 的 `uses:` 版本继续留在工作流中。这里统一的是项目、Maa 运行库及显式构建工具链版本，没有把所有依赖再复制一份进 manifest。
 
-Windows 内置 Python 保留原来的 3.13.14。Linux/macOS 原先跟随 python-build-standalone latest，本次固定为已查询到的 Python 3.13.15、release 20260901；它们的 minor 须与 recommendedPython 一致。Android 构建宿主 Python 和预编译内核 Python 分别维护。
+Windows、Linux/macOS 内置 Python 均固定为 3.13.17，Linux/macOS 使用 python-build-standalone release 20261021；它们的 minor 须与 recommendedPython 一致。Android 构建宿主 Python 和预编译内核 Python 分别维护，当前内核为 `3.13.15-maafw5.14.3`。
