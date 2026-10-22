@@ -29,7 +29,8 @@ jobs:
           cache: yarn
       - run: corepack enable
       - run: yarn install --frozen-lockfile
-      - run: yarn audit --level high
+      - name: Audit dependencies (high and critical)
+        run: node tools/audit.mjs
       - run: yarn run check
       - run: uv sync --frozen
       - run: uv run --frozen python tools/configure.py
