@@ -1,0 +1,629 @@
+{
+    "$__mpe_config_装备材料": {
+        "$__mpe_code": {
+            "prefix": "装备材料",
+            "coordinateMode": "absolute-v1",
+            "filename": "装备材料",
+            "savedViewport": {
+                "x": 0,
+                "y": 0,
+                "zoom": 1
+            },
+            "version": "v1.8.0"
+        }
+    },
+    "装备材料_刷取轮次": {
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "equip_pass_gate"
+            }
+        },
+        "post_delay": 0,
+        "focus": {
+            "Node.Recognition.Starting": "> 检查刷取轮次"
+        },
+        "next": [
+            "装备材料_周期检查"
+        ],
+        "on_error": [
+            "装备材料_回到大厅"
+        ],
+        "$__mpe_code": {
+            "position": {
+                "x": 5500,
+                "y": 2400
+            }
+        }
+    },
+    "装备材料_周期提醒": {
+        "post_delay": 0,
+        "focus": {
+            "Node.Recognition.Starting": "> 今日已刷取过装备材料"
+        },
+        "next": [
+            "装备材料_结束"
+        ],
+        "$__mpe_code": {
+            "position": {
+                "x": 5760,
+                "y": 2400
+            }
+        }
+    },
+    "装备材料_周期检查": {
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "periodic_check",
+                "custom_action_param": "k=装备材料"
+            }
+        },
+        "post_delay": 0,
+        "focus": {
+            "Node.Recognition.Starting": "> 检查今日是否已刷取"
+        },
+        "next": [
+            "装备材料_回到大厅"
+        ],
+        "on_error": [
+            "装备材料_周期提醒"
+        ],
+        "$__mpe_code": {
+            "position": {
+                "x": 6020,
+                "y": 2400
+            }
+        }
+    },
+    "装备材料_周期记录": {
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "record_period",
+                "custom_action_param": "k=装备材料"
+            }
+        },
+        "post_delay": 0,
+        "next": [
+            "装备材料_结束"
+        ],
+        "$__mpe_code": {
+            "position": {
+                "x": 6280,
+                "y": 2400
+            }
+        }
+    },
+    "装备材料_回到大厅": {
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "run",
+                "custom_action_param": "n=返回主界面&e=返回主界面_检测主界面"
+            }
+        },
+        "post_delay": 0,
+        "focus": {
+            "Node.Recognition.Starting": "> 先回到大厅"
+        },
+        "next": [
+            "装备材料_打开菜单"
+        ],
+        "on_error": [
+            "装备材料_返回大厅"
+        ],
+        "$__mpe_code": {
+            "position": {
+                "x": 5875,
+                "y": 0
+            }
+        }
+    },
+    "装备材料_开始": {
+        "pre_delay": 0,
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "init_counter",
+                "custom_action_param": "k=material_buy_count&ic=0&mc=3"
+            }
+        },
+        "post_delay": 0,
+        "next": [
+            "装备材料_刷取轮次"
+        ],
+        "$__mpe_code": {
+            "position": {
+                "x": 6000,
+                "y": 0
+            }
+        }
+    },
+    "装备材料_打开排序": {
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": [
+                    721,
+                    125,
+                    1,
+                    1
+                ]
+            }
+        },
+        "post_delay": 500,
+        "next": [
+            "装备材料_选择所持数量"
+        ],
+        "$__mpe_code": {
+            "position": {
+                "x": 7500,
+                "y": 0
+            }
+        }
+    },
+    "装备材料_打开筛选": {
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": [
+                    367,
+                    121,
+                    1,
+                    1
+                ]
+            }
+        },
+        "post_delay": 500,
+        "next": [
+            "装备材料_选择装备材料"
+        ],
+        "$__mpe_code": {
+            "position": {
+                "x": 7000,
+                "y": 0
+            }
+        }
+    },
+    "装备材料_打开背包": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    408,
+                    354,
+                    54,
+                    32
+                ],
+                "expected": [
+                    "背包"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click"
+        },
+        "post_delay": 900,
+        "focus": {
+            "Node.Recognition.Succeeded": "> 打开背包"
+        },
+        "next": [
+            "装备材料_进入装备"
+        ],
+        "$__mpe_code": {
+            "position": {
+                "x": 6500,
+                "y": 0
+            }
+        },
+        "timeout": 3000,
+        "on_error": [
+            "装备材料_点击背包"
+        ]
+    },
+    "装备材料_打开菜单": {
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": [
+                    1237,
+                    35,
+                    1,
+                    1
+                ]
+            }
+        },
+        "post_delay": 600,
+        "next": [
+            "装备材料_打开背包"
+        ],
+        "$__mpe_code": {
+            "position": {
+                "x": 6250,
+                "y": 0
+            }
+        }
+    },
+    "装备材料_查找三星关卡": {
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "find_material_stage",
+                "custom_action_param": "n=3&m=6"
+            }
+        },
+        "post_delay": 0,
+        "focus": {
+            "Node.Recognition.Starting": "> 扫描关卡列表"
+        },
+        "next": [
+            "装备材料_速战"
+        ],
+        "on_error": [
+            "装备材料_返回大厅"
+        ],
+        "$__mpe_code": {
+            "position": {
+                "x": 9250,
+                "y": 0
+            }
+        }
+    },
+    "装备材料_校正排序": {
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": [
+                    822,
+                    121,
+                    1,
+                    1
+                ]
+            }
+        },
+        "post_delay": 800,
+        "focus": {
+            "Node.Recognition.Starting": "> 排序切到升序"
+        },
+        "next": [
+            "装备材料_选择第一行第一个"
+        ],
+        "$__mpe_code": {
+            "position": {
+                "x": 8375,
+                "y": 250
+            }
+        }
+    },
+    "装备材料_点击背包": {
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": [
+                    440,
+                    313,
+                    1,
+                    1
+                ]
+            }
+        },
+        "post_delay": 900,
+        "timeout": 3000,
+        "focus": {
+            "Node.Recognition.Starting": "> 兜底直接点背包"
+        },
+        "next": [
+            "装备材料_进入装备"
+        ],
+        "on_error": [
+            "装备材料_返回大厅"
+        ],
+        "$__mpe_code": {
+            "position": {
+                "x": 6375,
+                "y": 250
+            }
+        }
+    },
+    "装备材料_确认排序": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    710,
+                    545,
+                    85,
+                    55
+                ],
+                "expected": [
+                    "确定"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click"
+        },
+        "post_delay": 800,
+        "next": [
+            "装备材料_校正排序"
+        ],
+        "$__mpe_code": {
+            "position": {
+                "x": 8000,
+                "y": 0
+            }
+        },
+        "focus": {
+            "Node.Recognition.Starting": "> 排序方式=所持数量"
+        }
+    },
+    "装备材料_结束": {
+        "pre_delay": 0,
+        "post_delay": 0,
+        "next": [
+            "清红糖_购买红糖周期检查"
+        ],
+        "focus": {
+            "Node.Recognition.Starting": "> 刷取结束"
+        },
+        "$__mpe_code": {
+            "position": {
+                "x": 11250,
+                "y": 750
+            }
+        }
+    },
+    "装备材料_获取途径": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    911,
+                    588,
+                    140,
+                    60
+                ],
+                "expected": [
+                    "获取途径"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click"
+        },
+        "post_delay": 900,
+        "focus": {
+            "Node.Recognition.Succeeded": "> 查看获取途径"
+        },
+        "next": [
+            "装备材料_进入获取详情"
+        ],
+        "$__mpe_code": {
+            "position": {
+                "x": 8750,
+                "y": 0
+            }
+        }
+    },
+    "装备材料_识别前往": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    233,
+                    357,
+                    816,
+                    283
+                ],
+                "expected": [
+                    "前往"
+                ]
+            }
+        },
+        "$__mpe_code": {
+            "position": {
+                "x": 9500,
+                "y": 250
+            }
+        }
+    },
+    "装备材料_返回大厅": {
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "run",
+                "custom_action_param": "n=返回主界面"
+            }
+        },
+        "post_delay": 0,
+        "focus": {
+            "Node.Recognition.Starting": "> 回到大厅"
+        },
+        "next": [
+            "装备材料_结束"
+        ],
+        "$__mpe_code": {
+            "position": {
+                "x": 10250,
+                "y": 750
+            }
+        }
+    },
+    "装备材料_进入获取详情": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    585,
+                    62,
+                    115,
+                    44
+                ],
+                "expected": [
+                    "获取详情"
+                ]
+            }
+        },
+        "focus": {
+            "Node.Recognition.Succeeded": "> 查找三星关卡"
+        },
+        "next": [
+            "装备材料_查找三星关卡"
+        ],
+        "$__mpe_code": {
+            "position": {
+                "x": 9000,
+                "y": 0
+            }
+        }
+    },
+    "装备材料_进入装备": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    90,
+                    301,
+                    58,
+                    32
+                ],
+                "expected": [
+                    "装备"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click"
+        },
+        "post_delay": 700,
+        "focus": {
+            "Node.Recognition.Succeeded": "> 进入装备页"
+        },
+        "next": [
+            "装备材料_打开筛选"
+        ],
+        "$__mpe_code": {
+            "position": {
+                "x": 6750,
+                "y": 0
+            }
+        },
+        "timeout": 3000,
+        "on_error": [
+            "装备材料_返回大厅"
+        ]
+    },
+    "装备材料_选择所持数量": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    680,
+                    188,
+                    110,
+                    44
+                ],
+                "expected": [
+                    "所持数量"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click"
+        },
+        "post_delay": 300,
+        "next": [
+            "装备材料_确认排序"
+        ],
+        "$__mpe_code": {
+            "position": {
+                "x": 7750,
+                "y": 0
+            }
+        }
+    },
+    "装备材料_选择第一行第一个": {
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": [
+                    307,
+                    237,
+                    1,
+                    1
+                ]
+            }
+        },
+        "post_delay": 900,
+        "focus": {
+            "Node.Recognition.Starting": "> 选中第一个材料"
+        },
+        "next": [
+            "装备材料_获取途径"
+        ],
+        "$__mpe_code": {
+            "position": {
+                "x": 8500,
+                "y": 0
+            }
+        }
+    },
+    "装备材料_选择装备材料": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    310,
+                    248,
+                    120,
+                    36
+                ],
+                "expected": [
+                    "装备材料"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click"
+        },
+        "post_delay": 700,
+        "focus": {
+            "Node.Recognition.Succeeded": "> 仅显示装备材料"
+        },
+        "next": [
+            "装备材料_打开排序"
+        ],
+        "$__mpe_code": {
+            "position": {
+                "x": 7250,
+                "y": 0
+            }
+        }
+    },
+    "装备材料_速战": {
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "material_fight"
+            }
+        },
+        "post_delay": 0,
+        "timeout": 6000,
+        "focus": {
+            "Node.Recognition.Starting": "> 速战刷取"
+        },
+        "next": [
+            "装备材料_周期记录"
+        ],
+        "on_error": [
+            "装备材料_结束"
+        ],
+        "$__mpe_code": {
+            "position": {
+                "x": 9500,
+                "y": 0
+            }
+        }
+    }
+}

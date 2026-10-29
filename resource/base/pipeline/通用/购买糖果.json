@@ -1,0 +1,690 @@
+{
+    "$__mpe_config_购买糖果": {
+        "$__mpe_code": {
+            "prefix": "购买糖果",
+            "coordinateMode": "absolute-v1",
+            "filename": "购买糖果",
+            "savedViewport": {
+                "x": 0,
+                "y": 0,
+                "zoom": 1
+            },
+            "version": "v1.8.0"
+        }
+    },
+    "购买糖果_关闭弹窗": {
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": [
+                    921,
+                    139,
+                    1,
+                    1
+                ]
+            }
+        },
+        "$__mpe_code": {
+            "position": {
+                "x": 7868,
+                "y": 5280
+            }
+        }
+    },
+    "购买糖果_已满提示": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    490,
+                    343,
+                    307,
+                    30
+                ],
+                "expected": [
+                    "无法继续恢复"
+                ]
+            }
+        },
+        "focus": {
+            "Node.Recognition.Starting": "> 已达购买上限"
+        },
+        "$__mpe_code": {
+            "position": {
+                "x": 6547,
+                "y": 5280
+            }
+        }
+    },
+    "购买糖果_数量输入框": {
+        "pre_delay": 0,
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": [
+                    635,
+                    382,
+                    1,
+                    1
+                ]
+            }
+        },
+        "post_delay": 300,
+        "next": [
+            "购买糖果_输入数量"
+        ],
+        "$__mpe_code": {
+            "position": {
+                "x": 7100,
+                "y": 5620
+            }
+        }
+    },
+    "购买糖果_未弹出": {
+        "focus": {
+            "Node.Recognition.Starting": "> 未出现购买界面，跳过本次购买"
+        },
+        "$__mpe_code": {
+            "position": {
+                "x": 6270,
+                "y": 4960
+            }
+        }
+    },
+    "购买糖果_检查冒险页": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    970,
+                    178,
+                    211,
+                    119
+                ],
+                "expected": [
+                    "副本"
+                ]
+            }
+        },
+        "focus": {
+            "Node.Recognition.Starting": "> 已进入冒险页"
+        },
+        "$__mpe_code": {
+            "position": {
+                "x": 5730,
+                "y": 5280
+            }
+        }
+    },
+    "购买糖果_检查购买界面": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    534,
+                    251,
+                    216,
+                    31
+                ],
+                "expected": [
+                    "是否购买"
+                ]
+            }
+        },
+        "focus": {
+            "Node.Recognition.Starting": "> 检测到购买界面"
+        },
+        "$__mpe_code": {
+            "position": {
+                "x": 6823,
+                "y": 5280
+            }
+        }
+    },
+    "购买糖果_点击购买": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    689,
+                    531,
+                    147,
+                    60
+                ],
+                "expected": [
+                    "购买"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click"
+        },
+        "post_delay": 500,
+        "next": [
+            "购买糖果_关闭弹窗"
+        ],
+        "on_error": [
+            "购买糖果_关闭弹窗"
+        ],
+        "$__mpe_code": {
+            "position": {
+                "x": 7663,
+                "y": 5620
+            }
+        }
+    },
+    "购买糖果_紫糖关闭弹窗": {
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": [
+                    927,
+                    128,
+                    1,
+                    1
+                ]
+            }
+        },
+        "$__mpe_code": {
+            "position": {
+                "x": 7902,
+                "y": 6640
+            }
+        }
+    },
+    "购买糖果_紫糖取消": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    484,
+                    544,
+                    54,
+                    29
+                ],
+                "expected": [
+                    "取消"
+                ]
+            }
+        },
+        "$__mpe_code": {
+            "position": {
+                "x": 5998,
+                "y": 6980
+            }
+        }
+    },
+    "购买糖果_紫糖开始": {
+        "pre_delay": 0,
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": [
+                    812,
+                    40,
+                    1,
+                    1
+                ]
+            }
+        },
+        "post_delay": 600,
+        "timeout": 5000,
+        "next": [
+            "购买糖果_紫糖检查购买界面",
+            "购买糖果_紫糖识别弹窗标题",
+            "购买糖果_已满提示"
+        ],
+        "on_error": [
+            "购买糖果_未弹出"
+        ],
+        "$__mpe_code": {
+            "position": {
+                "x": 5998,
+                "y": 4960
+            }
+        }
+    },
+    "购买糖果_紫糖数量输入框": {
+        "pre_delay": 0,
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": [
+                    638,
+                    380,
+                    1,
+                    1
+                ]
+            }
+        },
+        "post_delay": 300,
+        "next": [
+            "购买糖果_紫糖输入数量"
+        ],
+        "$__mpe_code": {
+            "position": {
+                "x": 6542,
+                "y": 6980
+            }
+        }
+    },
+    "购买糖果_紫糖检查购买界面": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    534,
+                    251,
+                    216,
+                    31
+                ],
+                "expected": [
+                    "是否购买"
+                ]
+            }
+        },
+        "focus": {
+            "Node.Recognition.Starting": "> 检测到星星糖购买界面"
+        },
+        "$__mpe_code": {
+            "position": {
+                "x": 6814,
+                "y": 6980
+            }
+        }
+    },
+    "购买糖果_紫糖点击购买": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    733,
+                    546,
+                    54,
+                    28
+                ],
+                "expected": [
+                    "购买"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click"
+        },
+        "post_delay": 500,
+        "next": [
+            "购买糖果_紫糖关闭弹窗"
+        ],
+        "on_error": [
+            "购买糖果_紫糖关闭弹窗"
+        ],
+        "$__mpe_code": {
+            "position": {
+                "x": 7086,
+                "y": 6980
+            }
+        }
+    },
+    "购买糖果_紫糖识别今日剩余次数": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    731,
+                    186,
+                    294,
+                    25
+                ],
+                "expected": [
+                    "剩余购买次数",
+                    "\\d+/\\d+"
+                ]
+            }
+        },
+        "$__mpe_code": {
+            "position": {
+                "x": 7358,
+                "y": 6980
+            }
+        }
+    },
+    "购买糖果_紫糖识别价格行": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    520,
+                    443,
+                    303,
+                    50
+                ],
+                "expected": [
+                    "\\d+"
+                ]
+            }
+        },
+        "$__mpe_code": {
+            "position": {
+                "x": 7358,
+                "y": 7660
+            }
+        }
+    },
+    "购买糖果_紫糖识别弹窗标题": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    602,
+                    127,
+                    73,
+                    22
+                ],
+                "expected": [
+                    "星星糖"
+                ]
+            }
+        },
+        "focus": {
+            "Node.Recognition.Starting": "> 检测到星星糖购买界面"
+        },
+        "$__mpe_code": {
+            "position": {
+                "x": 7630,
+                "y": 6980
+            }
+        }
+    },
+    "购买糖果_紫糖识别所持数量": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    477,
+                    302,
+                    323,
+                    26
+                ],
+                "expected": [
+                    "所持数量",
+                    "\\d+"
+                ]
+            }
+        },
+        "$__mpe_code": {
+            "position": {
+                "x": 7902,
+                "y": 6980
+            }
+        }
+    },
+    "购买糖果_紫糖识别数量输入框": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    590,
+                    352,
+                    120,
+                    44
+                ],
+                "expected": [
+                    "\\d+"
+                ]
+            }
+        },
+        "$__mpe_code": {
+            "position": {
+                "x": 5998,
+                "y": 7320
+            }
+        }
+    },
+    "购买糖果_紫糖输入数量": {
+        "action": {
+            "type": "InputText",
+            "param": {
+                "input_text": "1"
+            }
+        },
+        "post_delay": 300,
+        "$__mpe_code": {
+            "position": {
+                "x": 6270,
+                "y": 7320
+            }
+        }
+    },
+    "购买糖果_红糖取消": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    484,
+                    544,
+                    54,
+                    29
+                ],
+                "expected": [
+                    "取消"
+                ]
+            }
+        },
+        "$__mpe_code": {
+            "position": {
+                "x": 6542,
+                "y": 7320
+            }
+        }
+    },
+    "购买糖果_红糖开始": {
+        "pre_delay": 0,
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": [
+                    699,
+                    40,
+                    1,
+                    1
+                ]
+            }
+        },
+        "post_delay": 600,
+        "timeout": 5000,
+        "next": [
+            "购买糖果_检查购买界面",
+            "购买糖果_识别弹窗标题",
+            "购买糖果_已满提示"
+        ],
+        "on_error": [
+            "购买糖果_未弹出"
+        ],
+        "$__mpe_code": {
+            "position": {
+                "x": 5998,
+                "y": 5280
+            }
+        }
+    },
+    "购买糖果_识别今日剩余次数": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    731,
+                    186,
+                    294,
+                    25
+                ],
+                "expected": [
+                    "剩余购买次数",
+                    "\\d+/\\d+"
+                ]
+            }
+        },
+        "$__mpe_code": {
+            "position": {
+                "x": 6547,
+                "y": 4960
+            }
+        }
+    },
+    "购买糖果_识别价格行": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    520,
+                    443,
+                    319,
+                    54
+                ],
+                "expected": [
+                    "\\d+"
+                ]
+            }
+        },
+        "$__mpe_code": {
+            "position": {
+                "x": 7358,
+                "y": 7320
+            }
+        }
+    },
+    "购买糖果_识别弹窗标题": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    575,
+                    127,
+                    125,
+                    20
+                ],
+                "expected": [
+                    "购买"
+                ]
+            }
+        },
+        "focus": {
+            "Node.Recognition.Starting": "> 检测到购买界面"
+        },
+        "$__mpe_code": {
+            "position": {
+                "x": 6270,
+                "y": 5620
+            }
+        }
+    },
+    "购买糖果_识别所持数量": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    477,
+                    302,
+                    323,
+                    26
+                ],
+                "expected": [
+                    "所持数量",
+                    "\\d+"
+                ]
+            }
+        },
+        "$__mpe_code": {
+            "position": {
+                "x": 7100,
+                "y": 4960
+            }
+        }
+    },
+    "购买糖果_识别数量输入框": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    560,
+                    362,
+                    150,
+                    39
+                ],
+                "expected": [
+                    "\\d+"
+                ]
+            }
+        },
+        "$__mpe_code": {
+            "position": {
+                "x": 7380,
+                "y": 5280
+            }
+        }
+    },
+    "购买糖果_识别顶部体力": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    611,
+                    30,
+                    71,
+                    21
+                ],
+                "expected": [
+                    "\\d+"
+                ]
+            }
+        },
+        "$__mpe_code": {
+            "position": {
+                "x": 7663,
+                "y": 4960
+            }
+        }
+    },
+    "购买糖果_输入数量": {
+        "action": {
+            "type": "InputText",
+            "param": {
+                "input_text": "1"
+            }
+        },
+        "post_delay": 300,
+        "$__mpe_code": {
+            "position": {
+                "x": 7380,
+                "y": 5620
+            }
+        }
+    },
+    "购买糖果_进入冒险页": {
+        "pre_delay": 0,
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": [
+                    1182,
+                    664,
+                    1,
+                    1
+                ]
+            }
+        },
+        "post_delay": 800,
+        "timeout": 5000,
+        "next": [
+            "购买糖果_检查冒险页"
+        ],
+        "on_error": [
+            "购买糖果_未弹出"
+        ],
+        "$__mpe_code": {
+            "position": {
+                "x": 5730,
+                "y": 4960
+            }
+        }
+    }
+}

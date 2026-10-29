@@ -363,7 +363,7 @@
         },
         "post_delay": 0,
         "next": [
-            "清紫糖_进入冒险界面"
+            "清紫糖_购买紫糖周期检查"
         ],
         "$__mpe_code": {
             "position": {
@@ -838,6 +838,85 @@
             }
         }
     },
+    "清紫糖_购买紫糖": {
+        "pre_delay": 0,
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "buy_stamina",
+                "custom_action_param": "t=purple&c=0&e=1"
+            }
+        },
+        "post_delay": 0,
+        "next": [
+            "清紫糖_购买紫糖周期记录"
+        ],
+        "$__mpe_code": {
+            "position": {
+                "x": 6319,
+                "y": 344
+            }
+        },
+        "on_error": [
+            "清紫糖_进入冒险界面"
+        ]
+    },
+    "清紫糖_购买紫糖周期检查": {
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "periodic_check",
+                "custom_action_param": "k=购买紫糖"
+            }
+        },
+        "focus": {
+            "Node.Recognition.Starting": "> 检查今日是否已购买紫糖"
+        },
+        "next": [
+            "清紫糖_购买紫糖"
+        ],
+        "on_error": [
+            "清紫糖_购买紫糖提醒"
+        ],
+        "$__mpe_code": {
+            "position": {
+                "x": 5500,
+                "y": 1800
+            }
+        }
+    },
+    "清紫糖_购买紫糖周期记录": {
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "record_period",
+                "custom_action_param": "k=购买紫糖"
+            }
+        },
+        "next": [
+            "清紫糖_进入冒险界面"
+        ],
+        "$__mpe_code": {
+            "position": {
+                "x": 5760,
+                "y": 1800
+            }
+        }
+    },
+    "清紫糖_购买紫糖提醒": {
+        "focus": {
+            "Node.Recognition.Starting": "> 今日已购买过紫糖"
+        },
+        "next": [
+            "清紫糖_进入冒险界面"
+        ],
+        "$__mpe_code": {
+            "position": {
+                "x": 6020,
+                "y": 1800
+            }
+        }
+    },
     "清紫糖_进入克隆工厂": {
         "recognition": {
             "type": "OCR",
@@ -1102,26 +1181,6 @@
             }
         }
     },
-    "清紫糖_速战到手蜡": {
-        "pre_delay": 0,
-        "action": {
-            "type": "Custom",
-            "param": {
-                "custom_action": "run",
-                "custom_action_param": "t=速战"
-            }
-        },
-        "post_delay": 0,
-        "next": [
-            "清紫糖_副本周期记录"
-        ],
-        "$__mpe_code": {
-            "position": {
-                "x": 8143,
-                "y": 1325
-            }
-        }
-    },
     "清紫糖_速战克隆工厂": {
         "pre_delay": 0,
         "action": {
@@ -1139,6 +1198,26 @@
             "position": {
                 "x": 8117,
                 "y": 691
+            }
+        }
+    },
+    "清紫糖_速战到手蜡": {
+        "pre_delay": 0,
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "run",
+                "custom_action_param": "t=速战"
+            }
+        },
+        "post_delay": 0,
+        "next": [
+            "清紫糖_副本周期记录"
+        ],
+        "$__mpe_code": {
+            "position": {
+                "x": 8143,
+                "y": 1325
             }
         }
     },

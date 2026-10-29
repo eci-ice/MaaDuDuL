@@ -11,11 +11,16 @@ from maa.custom_action import CustomAction
 from maa.custom_recognition import CustomRecognition
 from maa.context import Context
 
+import os
 import re
 import time
 
+import numpy as np
+
 from agent.customs.utils import Prompter, MatrixOperator, LocalStorage
 from agent.customs.maahelper import ParamAnalyzer, Tasker, RecoHelper
+
+from .store import RedReserve
 
 # ============== 清紫糖 ==============
 
@@ -518,8 +523,9 @@ class SelectRedLevel(CustomAction):
                 },
             )
 
-            # 执行速刷
-            Tasker(context).run("速战_开始")
+            # 执行速刷（走我们自己的速战包装，带入场券不足/饥饿提示/补糖分支与预留场次）
+            if run_candy_fight(context) is None:
+                return False
 
             # 更新执行进度
             next_chapter, next_stage = self._get_next_level(
@@ -672,3 +678,463 @@ class SelectRedLevel(CustomAction):
         end_value = end_chapter * 10 + end_stage
 
         return start_value <= progress_value <= end_value
+
+
+# ============== 速战包装 ==============
+
+# 每场速战消耗的红糖（14-9 微微辣实测 10）；章节单价不同会导致场次偏多，届时改为读单价
+STAMINA_PER_FIGHT = 10
+# 顶部体力识别节点，与购买糖果共用（ROI 由红色糖果球锚点动态给出）
+STAMINA_NODE = "购买糖果_识别顶部体力"
+# 单次读取最多扫几遍（单次读数不可信，按多读一致性判定）
+STAMINA_READS = 3
+# 红糖容量上限：超过它的读数一律判为无效（例如把别的文字读成 15354）
+STAMINA_CAP = 999
+# 双取字框交叉读取：宽框（左余量与右侧都放宽，容下三位数字+斜杠+三位数字+加号）与常规框
+STAMINA_BALL_ROI_WIDE = (-16, 16, 220, 48)
+# 读数失败现场转储目录（相对项目根，已被 .gitignore 的 debug/ 覆盖）
+STAMINA_DUMP_DIR = os.path.join("debug", "stamina")
+# 读数前的画面稳定门闩：复用速战面板识别节点（OCR「速战」）
+STAMINA_GATE_NODE = "速战_打开速战面板"
+STAMINA_GATE_TRY = 3
+STAMINA_GATE_WAIT = 0.4
+
+
+# 最近一次扫描的现场信息，供失败转储使用
+_PROBE: dict = {}
+
+
+# 锚点参数：顶部横带高度、红球簇宽度范围、红球右边界到数字的偏移与取字框（1280 基准）
+STAMINA_BAND_HEIGHT = 60
+STAMINA_BALL_WIDTH = (20, 60)
+# 只在顶栏左段找球：实测糖果球右边界 512（冒险页）~701（关卡页），
+# 右侧真正的红色徽标在 1100 之后，取 900 兼顾覆盖与排除
+STAMINA_BALL_X_MAX = 900
+STAMINA_BALL_ROI = (4, 24, 120, 34)
+# 锚点失败时的兜底取字框：主界面、关卡页
+# 关卡页顶栏因左侧有返回箭头+标题而整体右移，取字框要相应右挪
+STAMINA_FALLBACK_ROIS = ([590, 26, 130, 34], [700, 22, 160, 44])
+
+# 我们自己发起速战时追加的候选：Tasker.run 只在调用方给了 next 时才沿用，
+# 因此这里显式写入即可盖过 monitor 重建，无需修改共享的 速战.json
+FIGHT_OVERRIDE = {
+    "速战_打开速战面板": {
+        "next": [
+            "速战_确保可战斗",
+            "清红糖_入场券不足",
+            "速战_无法速战",
+            "速战_体力不足",
+            "清红糖_饥饿提示",
+        ]
+    },
+    "速战_体力不足": {"next": ["清红糖_补糖"]},
+}
+
+
+def find_red_ball(img: np.ndarray) -> int | None:
+    """在顶部横带里定位红色糖果球，返回其右边界 x（1280 基准）。
+
+    红糖就是那颗红球，球右边的数字就是体力；球会随页面整体移动，
+    所以用球做锚点比固定 ROI 可靠。只在左半屏找，避免把右侧的红色角标
+    当成糖果球（实测球右边界主界面 583、关卡页 697，右侧徽标都在 1100 之后）。
+
+    Args:
+        img：当前截图
+
+    Returns:
+        int | None：红球右边界，找不到时返回 None
+    """
+    scale = img.shape[1] / 1280
+    band = np.asarray(img[: round(STAMINA_BAND_HEIGHT * scale)], dtype=np.int16)
+    band = band[:, : min(band.shape[1], round(STAMINA_BALL_X_MAX * scale))]
+    if band.size < 3:
+        return None
+
+    # Maa 的截图是 BGR：先按原顺序试（RGB 输入可直接命中），不中再翻转通道重试。
+    # 不用「通道排序法」，实测它会把灰蓝元素也算成红，在真实 Maa 帧上多出 x≈15..74 的假簇。
+    for source in (band, band[:, :, ::-1]):
+        anchor = leftmost_ball(source, scale)
+        if anchor is not None:
+            return anchor
+    return None
+
+
+def red_mask(band: np.ndarray) -> np.ndarray:
+    """红色掩码（按 R/G/B 直取，调用方需保证通道顺序）。
+
+    Args:
+        band：顶部横带（RGB 或翻转后的 BGR）
+
+    Returns:
+        np.ndarray：布尔掩码
+    """
+    red, green, blue = band[:, :, 0], band[:, :, 1], band[:, :, 2]
+    return (red > 150) & (red - green > 70) & (red - blue > 60)
+
+
+def leftmost_ball(band: np.ndarray, scale: float) -> int | None:
+    """取最左侧宽度落在糖果球区间的红色簇右边界。
+
+    Args:
+        band：顶部横带
+        scale：截图宽度与 1280 的比例
+
+    Returns:
+        int | None：红球右边界（1280 基准），没有合格簇时返回 None
+    """
+    hits = red_mask(band).sum(axis=0) > 0
+    start = None
+    for index, hit in enumerate(hits):
+        if hit and start is None:
+            start = index
+        elif not hit and start is not None:
+            width = (index - start) / scale
+            if STAMINA_BALL_WIDTH[0] <= width <= STAMINA_BALL_WIDTH[1]:
+                return round(index / scale)
+            start = None
+    if start is not None:
+        width = (len(hits) - start) / scale
+        if STAMINA_BALL_WIDTH[0] <= width <= STAMINA_BALL_WIDTH[1]:
+            return round(len(hits) / scale)
+    return None
+
+
+def display_text(raw: str) -> str:
+    """把 OCR 原文裁成只含数字与分隔符的展示文本。
+
+    加号按钮、叶子图标常被 OCR 一并读入（如 202/202+、X、Y），日志里只保留数字部分；
+    裁空时回退原文，避免把真实异常信息吞掉。
+    """
+    cleaned = re.sub(r"[^0-9/,.]", "", raw or "")
+    return cleaned or (raw or "")
+
+
+def parse_stamina(text: str) -> int | None:
+    """从「当前/上限」文本里取出当前体力。
+
+    采纳条件：至少两个数字、上限大于 0、且两个值都不超过 STAMINA_CAP。
+    买糖后体力可超过显示上限（833/202 这类真实读数必须采纳），但不能超过容量上限；
+    单个数字（金币、叶子）或荒谬值（把弹窗里的文字读成 15.354,603 → 354603）一律拒绝。
+
+    Args:
+        text：OCR 原文
+
+    Returns:
+        int | None：当前体力，不合规时返回 None
+    """
+    tokens = re.findall(r"\d+", text.replace(",", ""))
+    if len(tokens) < 2:
+        return None
+    # 游戏里的数字不会有前导零（真实 2 显示 2，不会显示 02），出现 02/021 必是错读首位
+    if re.match(r"^0\d+", tokens[0]) or re.match(r"^0\d+", tokens[1]):
+        return None
+    current, cap = int(tokens[0]), int(tokens[1])
+    if cap <= 0 or current > STAMINA_CAP or cap > STAMINA_CAP:
+        return None
+    return current
+
+
+def has_leading_zero(text: str) -> bool:
+    """判断文本里的数字是否出现前导零（如 02、021）。
+
+    Args:
+        text：OCR 原文
+
+    Returns:
+        bool：存在前导零的数字返回 True
+    """
+    return any(re.match(r"^0\d+", token) for token in re.findall(r"\d+", text.replace(",", "")))
+
+
+def read_roi(rh: RecoHelper, roi: list[int]) -> tuple[str, int | None]:
+    """按指定 ROI 读一次体力。
+
+    Args:
+        rh：识别辅助器
+        roi：取字框
+
+    Returns:
+        tuple：OCR 原文与解析出的体力（无效为 None）
+    """
+    text = rh.recognize(STAMINA_NODE, {"roi": roi}).concat() or ""
+    return text, parse_stamina(text)
+
+
+def cross_read(left: tuple[str, int | None], right: tuple[str, int | None]) -> tuple[str, int | None]:
+    """交叉两个取字框的结果，取更可信的一个。
+
+    Args:
+        left：宽框的 (原文, 体力)
+        right：常规框的 (原文, 体力)
+
+    Returns:
+        tuple：采纳的 (原文, 体力)，无法裁决时为 (原文, None)
+    """
+    left_text, left_value = left
+    right_text, right_value = right
+
+    if left_value is not None and right_value is not None:
+        if left_value == right_value:
+            return right_text, right_value
+        # 前导零已由 parse_stamina 判无效，这里只作兜底：优先不带前导零的那个
+        if has_leading_zero(left_text) and not has_leading_zero(right_text):
+            return right_text, right_value
+        if has_leading_zero(right_text) and not has_leading_zero(left_text):
+            return left_text, left_value
+        Prompter.log(f"两种取字框读到 {left_value} 和 {right_value}，不一致")
+        return right_text, None
+
+    if left_value is not None:
+        return left_text, left_value
+    if right_value is not None:
+        return right_text, right_value
+    return right_text, None
+
+
+def dump_stamina_failure() -> str:
+    """把最近一次扫描的现场转储成 npy，并输出一行诊断日志。
+
+    截图用 numpy 直接存 .npy（仓库没有 PIL），目录 debug/stamina/ 已被 .gitignore 忽略。
+
+    Returns:
+        str：截图路径，保存失败时为空串
+    """
+    image = _PROBE.get("image")
+    path = ""
+    if image is not None:
+        try:
+            os.makedirs(STAMINA_DUMP_DIR, exist_ok=True)
+            path = os.path.join(STAMINA_DUMP_DIR, f"fail_{int(time.time() * 1000)}.npy")
+            np.save(path, image)
+        except Exception as error:
+            Prompter.log(f"保存体力识别截图失败，{error}")
+            path = ""
+
+    anchor = _PROBE.get("anchor")
+    if anchor is None:
+        Prompter.log(f"未能读取红糖体力，锚点未找到，截图存在 {path}")
+    else:
+        Prompter.log(f"未能读取红糖体力，锚点 {anchor}，截图存在 {path}")
+        Prompter.log(
+            f"宽框 {_PROBE.get('wide')} 读到 {display_text(_PROBE.get('wide_text', ''))}，"
+            f"常规框 {_PROBE.get('normal')} 读到 {display_text(_PROBE.get('normal_text', ''))}"
+        )
+    return path
+
+
+def scan_stamina(context: Context) -> tuple[str, int | None]:
+    """扫一次顶部红糖体力：锚点处双框交叉读取，失败再试兜底 ROI。
+
+    Args:
+        context：MaaFW 上下文对象
+
+    Returns:
+        tuple：最后一次 OCR 原文与解析出的体力（解析不到为 None）
+    """
+    rh = RecoHelper(context).refresh_screencap()
+    anchor = find_red_ball(rh.screencap) if rh.screencap is not None else None
+    # 记录现场，供失败时转储复现（截图是 BGR/RGB 都只是通道顺序，形状即屏幕分辨率）
+    _PROBE.clear()
+    _PROBE["image"] = rh.screencap
+    _PROBE["anchor"] = anchor
+
+    text = ""
+    if anchor is not None:
+        offsets = (STAMINA_BALL_ROI_WIDE, STAMINA_BALL_ROI)
+        boxes = [[anchor + x, top, width, height] for x, top, width, height in offsets]
+        _PROBE["wide"] = boxes[0]
+        _PROBE["normal"] = boxes[1]
+        left_text, left_value = read_roi(rh, boxes[0])
+        right_text, right_value = read_roi(rh, boxes[1])
+        _PROBE["wide_text"] = left_text
+        _PROBE["normal_text"] = right_text
+        value_text, value = cross_read((left_text, left_value), (right_text, right_value))
+        text = value_text
+        if value is not None:
+            return text, value
+
+    for roi in STAMINA_FALLBACK_ROIS:
+        text, stamina = read_roi(rh, roi)
+        if stamina is not None:
+            return text, stamina
+    return text, None
+
+
+def read_stamina(context: Context) -> int | None:
+    """读取顶部红糖体力：多次读取做一致性判定，读到什么就信什么。
+
+    Note:
+        - 仅用于红糖/体力口径（红球锚点 + 兜底 ROI）；紫糖顶部是星星糖，读数口径不同，不要复用；
+        - 采纳条件：至少两个数字、无前导零、上限大于 0 且不超容量上限；
+        - 单次读数不可信，最多读 STAMINA_READS 次、每次重新截图：
+          前两次一致即采纳；否则读第三次，出现两次的采纳，三次全不同则以最新为准；
+        - 不与历史读数做比较（体力大额消耗是真实变化，历史比较只会误伤）。
+
+    Args:
+        context：MaaFW 上下文对象
+
+    Returns:
+        int | None：当前体力，读不到时返回 None
+    """
+    reads: list[tuple[str, int]] = []
+    for _ in range(STAMINA_READS):
+        text, stamina = scan_stamina(context)
+        if stamina is None:
+            continue
+        reads.append((text, stamina))
+        if len(reads) >= 2 and reads[-1][1] == reads[-2][1]:
+            Prompter.log(f"读到红糖 {display_text(text)}")
+            return stamina
+
+    if not reads:
+        # 全部读不到：转储现场，方便从 npy 里复现并量出数字真实位置
+        dump_stamina_failure()
+        return None
+
+    for text, stamina in reads:
+        if sum(1 for _, other in reads if other == stamina) >= 2:
+            Prompter.log(f"读到红糖 {display_text(text)}")
+            return stamina
+
+    _, latest = reads[-1]
+    Prompter.log(f"三次读到红糖不一致 {'/'.join(str(v) for _, v in reads)}，取最后一次 {latest}")
+    return latest
+
+
+def wait_fight_ready(context: Context) -> bool:
+    """用「速战」按钮做门闩，确认画面已渲染完成。
+
+    点「前往」后会有一段淡入过渡，此时顶栏数字可能还没画全，
+    所以先等速战按钮出现，再读体力。
+
+    Args:
+        context：MaaFW 上下文对象
+
+    Returns:
+        bool：画面已稳定返回 True，重试仍不稳定返回 False
+    """
+    for _ in range(STAMINA_GATE_TRY):
+        if RecoHelper(context).refresh_screencap().recognize(STAMINA_GATE_NODE).hit:
+            return True
+        Tasker(context).wait(STAMINA_GATE_WAIT)
+    return False
+
+
+def plan_fights(context: Context) -> tuple[bool, int | None]:
+    """按活动任务预留决定本次速战是否开打、打几场。
+
+    Note:
+        - 每场速战消耗的红糖按 STAMINA_PER_FIGHT 估算（14-9 微微辣实测 10）；
+        - 预留生效时，凡是无法确定体力（门闩失败或读数无效）都停止本轮，保护要留给活动的体力；
+          预留未生效时一律放行。
+
+    Args:
+        context：MaaFW 上下文对象
+
+    Returns:
+        tuple：是否允许开打、指定场次（None 表示不指定，沿用原「最大」流程）
+    """
+    reserve = RedReserve.threshold
+    if reserve <= 0:
+        return True, None
+    if RedReserve.done_today():
+        return True, None
+
+    # 先确认画面已稳（速战按钮可见），避免读到淡入过渡帧的半渲染数字；稳不了就停，别赌
+    if not wait_fight_ready(context):
+        Prompter.log("速战按钮未出现，画面未稳定，停止本轮刷取保护预留")
+        return False, None
+
+    stamina = read_stamina(context)
+    if stamina is None:
+        # 预留已生效，读数无效就停下，避免把要留给活动的体力花掉
+        Prompter.log("预留生效但体力读数无效，停止本轮刷取保护预留")
+        return False, None
+
+    fights = stamina // STAMINA_PER_FIGHT - reserve // STAMINA_PER_FIGHT
+    if fights <= 0:
+        Prompter.log(f"已为活动任务预留 {stamina} 红糖，停止刷取")
+        return False, None
+
+    Prompter.log(f"当前红糖 {stamina}，预留 {reserve}，本次速战 {fights} 场")
+    return True, fights
+
+
+def run_candy_fight(context: Context):
+    """用我们自己的 next 覆盖发起一次速战。
+
+    在同一次嵌套 run 内把入场券不足、饥饿提示与补糖挂进候选列表，
+    使这些分支能在速战自身的扫描循环里被命中，而不是等 run 结束后再补救；
+    预留生效时按剩余场次直接指定作战次数。
+
+    Args:
+        context：MaaFW 上下文对象
+
+    Returns:
+        TaskDetail | None：速战任务的执行结果，预留不足未开打时返回 None
+    """
+    ok, fights = plan_fights(context)
+    if not ok:
+        return None
+
+    override = {node: dict(patch) for node, patch in FIGHT_OVERRIDE.items()}
+    if fights:
+        override["速战_确保可战斗"] = {"next": ["速战_指定作战次数"]}
+        override["速战_输入作战次数"] = {"input_text": str(fights)}
+    return Tasker(context).run("速战_开始", override)
+
+
+@AgentServer.custom_action("candy_fight")
+class CandyFight(CustomAction):
+    """红糖速战包装自定义动作类。
+
+    以我们自己的 next 覆盖发起速战，候选里包含入场券不足、饥饿提示与补糖。
+    """
+
+    def run(self, context: Context, argv: CustomAction.RunArg) -> bool:
+        """发起一次带自定义分支的速战。
+
+        Args:
+            context：MaaFW 上下文对象
+            argv：自定义动作参数（本动作无需额外参数）
+
+        Returns:
+            bool：速战流程执行完毕返回 True
+        """
+        try:
+            return run_candy_fight(context) is not None
+        except Exception as e:
+            return Prompter.error("红糖速战", e)
+
+
+@AgentServer.custom_action("red_stamina_check")
+class RedStaminaCheck(CustomAction):
+    """清红糖开局体力检查。
+
+    开局体力连一场速战都不够时直接结束本轮，避免进关卡后才发现打不了。
+    活动体力预留不在这里判断，由 run_candy_fight 在发起速战前处理。
+    """
+
+    MIN_STAMINA = 10
+
+    def run(self, context: Context, argv: CustomAction.RunArg) -> bool:
+        """检查开局红糖体力是否够一场速战。
+
+        Args:
+            context：MaaFW 上下文对象
+            argv：自定义动作参数（本动作无需额外参数）
+
+        Returns:
+            bool：体力够继续返回 True，不足返回 False（由 on_error 回大厅收尾）
+        """
+        try:
+            stamina = read_stamina(context)
+            if stamina is None:
+                Prompter.log("未能读取红糖体力，跳过开局检查")
+                return True
+            if stamina < self.MIN_STAMINA:
+                Prompter.log(f"红糖不足，当前 {stamina}，结束本轮")
+                return False
+            return True
+        except Exception as e:
+            return Prompter.error("检查开局体力", e)
