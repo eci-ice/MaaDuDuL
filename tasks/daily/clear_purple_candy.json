@@ -10,7 +10,8 @@
 			],
 			"option": [
 				"清紫糖-克隆工厂",
-				"清紫糖-副本"
+				"清紫糖-副本",
+				"清紫糖-购买紫糖"
 			]
 		}
 	],
@@ -376,6 +377,70 @@
 					"custom_action_param": "l={关卡}"
 				}
 			}
+		},
+		"清紫糖-购买紫糖": {
+			"type": "switch",
+			"label": "$清紫糖-购买紫糖",
+			"description": "$使用水晶叶购买星星糖补充模式副本入场资源",
+			"cases": [
+				{
+					"name": "No",
+					"pipeline_override": {
+						"清紫糖_购买紫糖": {
+							"action": "DoNothing"
+						}
+					},
+					"label": "$No"
+				},
+				{
+					"name": "Yes",
+					"option": [
+						"清紫糖-购买紫糖-次数",
+						"清紫糖-购买紫糖-周期检查"
+					],
+					"label": "$Yes"
+				}
+			],
+			"default_case": "No"
+		},
+		"清紫糖-购买紫糖-次数": {
+			"type": "input",
+			"label": "$购买紫糖次数",
+			"description": "$今日累计购买次数（不是本次购买次数）：可填 0 表示今日不购买；紫糖 0-3，程序会补买到该累计次数，且不超过界面显示的今日上限",
+			"inputs": [
+				{
+					"name": "次数",
+					"label": "$次数",
+					"default": "0",
+					"pipeline_type": "string",
+					"verify": "^[0-3]$"
+				}
+			],
+			"pipeline_override": {
+				"清紫糖_购买紫糖": {
+					"custom_action_param": "t=purple&c={次数}"
+				}
+			}
+		},
+		"清紫糖-购买紫糖-周期检查": {
+			"type": "switch",
+			"label": "$每日仅检查一次",
+			"cases": [
+				{
+					"name": "No",
+					"pipeline_override": {
+						"清紫糖_购买紫糖周期检查": {
+							"action": "DoNothing"
+						}
+					},
+					"label": "$No"
+				},
+				{
+					"name": "Yes",
+					"label": "$Yes"
+				}
+			],
+			"default_case": "Yes"
 		}
 	}
 }

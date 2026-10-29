@@ -10,7 +10,9 @@
 			],
 			"option": [
 				"清红糖-心形",
-				"清红糖-装备"
+				"清红糖-装备",
+				"清红糖-购买红糖",
+				"清红糖-预留活动体力"
 			]
 		}
 	],
@@ -152,7 +154,7 @@
 				{
 					"name": "Yes",
 					"option": [
-						"清红糖-装备-关卡区间"
+						"清红糖-装备-模式"
 					],
 					"label": "$Yes"
 				}
@@ -197,6 +199,159 @@
 					"custom_action_param": "sl={起始章节}-{起始关卡}&el={结束章节}-{结束关卡}"
 				}
 			}
+		},
+		"清红糖-装备-模式": {
+			"type": "select",
+			"label": "$清红糖-装备-模式",
+			"default_case": "自动刷取",
+			"cases": [
+				{
+					"name": "自动刷取",
+					"pipeline_override": {
+						"清红糖_装备开始": {
+							"next": [
+								"装备材料_开始"
+							]
+						}
+					},
+					"option": [
+						"清红糖-装备-自动刷取-周期检查"
+					],
+					"description": "$自动刷取最少的装备材料",
+					"label": "$自动刷取"
+				},
+				{
+					"name": "关卡区间",
+					"option": [
+						"清红糖-装备-关卡区间"
+					],
+					"pipeline_override": {
+						"清红糖_装备开始": {
+							"next": [
+								"清红糖_进入冒险2"
+							]
+						}
+					},
+					"description": "$原有手动推进流程：按章节关卡区间步进循环",
+					"label": "$关卡区间"
+				}
+			]
+		},
+		"清红糖-购买红糖": {
+			"type": "switch",
+			"label": "$清红糖-购买红糖",
+			"description": "$使用水晶叶购买朱珠糖补充体力",
+			"cases": [
+				{
+					"name": "No",
+					"pipeline_override": {
+						"清红糖_购买红糖": {
+							"action": "DoNothing",
+							"next": [
+								"返回主界面"
+							]
+						}
+					},
+					"label": "$No"
+				},
+				{
+					"name": "Yes",
+					"option": [
+						"清红糖-购买红糖-次数",
+						"清红糖-购买红糖-周期检查"
+					],
+					"label": "$Yes"
+				}
+			],
+			"default_case": "No"
+		},
+		"清红糖-购买红糖-次数": {
+			"type": "input",
+			"label": "$购买红糖次数",
+			"description": "$今日累计购买次数（不是本次购买次数）：可填 0 表示今日不购买；红糖 0-10，程序会补买到该累计次数，且不超过界面显示的今日上限",
+			"inputs": [
+				{
+					"name": "次数",
+					"label": "$次数",
+					"default": "0",
+					"pipeline_type": "string",
+					"verify": "^(10|[0-9])$"
+				}
+			],
+			"pipeline_override": {
+				"清红糖_购买红糖": {
+					"custom_action_param": "t=red&c={次数}&e=1"
+				},
+				"清红糖_补糖": {
+					"custom_action_param": "t=red&c={次数}"
+				}
+			}
+		},
+		"清红糖-装备-自动刷取-周期检查": {
+			"type": "switch",
+			"label": "$每日仅检查一次",
+			"cases": [
+				{
+					"name": "No",
+					"pipeline_override": {
+						"装备材料_周期检查": {
+							"action": "DoNothing"
+						}
+					},
+					"label": "$No"
+				},
+				{
+					"name": "Yes",
+					"label": "$Yes"
+				}
+			],
+			"default_case": "Yes"
+		},
+		"清红糖-购买红糖-周期检查": {
+			"type": "switch",
+			"label": "$每日仅检查一次",
+			"cases": [
+				{
+					"name": "No",
+					"pipeline_override": {
+						"清红糖_购买红糖周期检查": {
+							"action": "DoNothing"
+						}
+					},
+					"label": "$No"
+				},
+				{
+					"name": "Yes",
+					"label": "$Yes"
+				}
+			],
+			"default_case": "Yes"
+		},
+		"清红糖-预留活动体力": {
+			"type": "switch",
+			"label": "$清红糖-预留活动体力",
+			"description": "$为每日活动作战预留红糖：开启后自动刷取在体力不足时停止，购买红糖不受限制",
+			"cases": [
+				{
+					"name": "No",
+					"pipeline_override": {
+						"清红糖_预留设置": {
+							"custom_action_param": "r=0"
+						}
+					},
+					"label": "$No"
+				},
+				{
+					"name": "Yes",
+					"pipeline_override": {
+						"清红糖_预留设置": {
+							"custom_action_param": "r=200"
+						}
+					},
+					"label": "$Yes"
+				}
+			],
+			"default_case": "No"
 		}
 	}
 }

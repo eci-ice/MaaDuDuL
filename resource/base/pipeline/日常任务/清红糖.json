@@ -41,6 +41,106 @@
             }
         }
     },
+    "清红糖_体力检查": {
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "red_stamina_check"
+            }
+        },
+        "post_delay": 0,
+        "focus": {
+            "Node.Recognition.Starting": "> 检查开局红糖体力"
+        },
+        "next": [
+            "清红糖_心形开始"
+        ],
+        "on_error": [
+            "清红糖_购买红糖周期检查"
+        ],
+        "$__mpe_code": {
+            "position": {
+                "x": 5870,
+                "y": -300
+            }
+        }
+    },
+    "清红糖_入场券不足": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    555,
+                    125,
+                    190,
+                    55
+                ],
+                "expected": [
+                    "入场券不足"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": [
+                    533,
+                    553,
+                    1,
+                    1
+                ]
+            }
+        },
+        "post_delay": 600,
+        "focus": {
+            "Node.Recognition.Succeeded": "> 入场券不足，关闭弹窗并结束本轮"
+        },
+        "next": [
+            "返回主界面"
+        ],
+        "$__mpe_code": {
+            "position": {
+                "x": 8730,
+                "y": 1770
+            }
+        }
+    },
+    "清红糖_复位装备轮次": {
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "init_counter",
+                "custom_action_param": "k=equip_pass&ic=0&mc=0"
+            }
+        },
+        "next": [
+            "清红糖_预留设置"
+        ],
+        "$__mpe_code": {
+            "position": {
+                "x": 5500,
+                "y": 1800
+            }
+        }
+    },
+    "清红糖_复位轮次": {
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "init_counter",
+                "custom_action_param": "k=buy_red_pass&ic=0&mc=1"
+            }
+        },
+        "next": [
+            "清红糖_复位装备轮次"
+        ],
+        "$__mpe_code": {
+            "position": {
+                "x": 5760,
+                "y": 1800
+            }
+        }
+    },
     "清红糖_娃娃怪破坏者": {
         "recognition": {
             "type": "OCR",
@@ -80,7 +180,7 @@
         },
         "post_delay": 0,
         "next": [
-            "清红糖_心形开始"
+            "清红糖_复位轮次"
         ],
         "$__mpe_code": {
             "position": {
@@ -221,7 +321,10 @@
                 "x": 7329,
                 "y": 240
             }
-        }
+        },
+        "on_error": [
+            "返回主界面"
+        ]
     },
     "清红糖_振兴之路": {
         "recognition": {
@@ -382,6 +485,34 @@
             }
         }
     },
+    "清红糖_补糖": {
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "red_supply",
+                "custom_action_param": "t=red&c=0"
+            }
+        },
+        "post_delay": 0,
+        "timeout": 10000,
+        "focus": {
+            "Node.Recognition.Starting": "> 体力不足，就地补糖"
+        },
+        "next": [
+            "速战_跳过动画",
+            "速战_确认奖励",
+            "速战_等级提升"
+        ],
+        "on_error": [
+            "返回主界面"
+        ],
+        "$__mpe_code": {
+            "position": {
+                "x": 6020,
+                "y": 1800
+            }
+        }
+    },
     "清红糖_装备开始": {
         "pre_delay": 0,
         "post_delay": 0,
@@ -399,7 +530,7 @@
         "pre_delay": 0,
         "post_delay": 0,
         "next": [
-            "返回主界面"
+            "清红糖_购买红糖周期检查"
         ],
         "$__mpe_code": {
             "position": {
@@ -427,6 +558,85 @@
             "position": {
                 "x": 6905,
                 "y": 593
+            }
+        }
+    },
+    "清红糖_购买红糖": {
+        "pre_delay": 0,
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "buy_stamina",
+                "custom_action_param": "t=red&c=0&e=1"
+            }
+        },
+        "post_delay": 0,
+        "next": [
+            "清红糖_购买红糖周期记录"
+        ],
+        "$__mpe_code": {
+            "position": {
+                "x": 7868,
+                "y": 1080
+            }
+        },
+        "on_error": [
+            "返回主界面"
+        ]
+    },
+    "清红糖_购买红糖周期提醒": {
+        "focus": {
+            "Node.Recognition.Starting": "> 今日已购买过红糖"
+        },
+        "next": [
+            "返回主界面"
+        ],
+        "$__mpe_code": {
+            "position": {
+                "x": 6280,
+                "y": 1800
+            }
+        }
+    },
+    "清红糖_购买红糖周期检查": {
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "periodic_check",
+                "custom_action_param": "k=购买红糖"
+            }
+        },
+        "focus": {
+            "Node.Recognition.Starting": "> 检查今日是否已购买红糖"
+        },
+        "next": [
+            "清红糖_购买红糖"
+        ],
+        "on_error": [
+            "清红糖_购买红糖周期提醒"
+        ],
+        "$__mpe_code": {
+            "position": {
+                "x": 6540,
+                "y": 1800
+            }
+        }
+    },
+    "清红糖_购买红糖周期记录": {
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "record_period",
+                "custom_action_param": "k=购买红糖"
+            }
+        },
+        "next": [
+            "清红糖_心形开始"
+        ],
+        "$__mpe_code": {
+            "position": {
+                "x": 6800,
+                "y": 1800
             }
         }
     },
@@ -511,8 +721,7 @@
         "action": {
             "type": "Custom",
             "param": {
-                "custom_action": "run",
-                "custom_action_param": "t=速战"
+                "custom_action": "candy_fight"
             }
         },
         "next": [
@@ -522,6 +731,58 @@
             "position": {
                 "x": 7663,
                 "y": -300
+            }
+        },
+        "on_error": [
+            "返回主界面"
+        ]
+    },
+    "清红糖_预留设置": {
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "red_reserve",
+                "custom_action_param": "r=0"
+            }
+        },
+        "next": [
+            "清红糖_体力检查"
+        ],
+        "$__mpe_code": {
+            "position": {
+                "x": 7060,
+                "y": 1800
+            }
+        }
+    },
+    "清红糖_饥饿提示": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    420,
+                    322,
+                    600,
+                    66
+                ],
+                "expected": [
+                    "饿得动不了"
+                ]
+            }
+        },
+        "action": {
+            "type": "DoNothing"
+        },
+        "focus": {
+            "Node.Recognition.Succeeded": "> 体力不足且已达购买上限"
+        },
+        "next": [
+            "返回主界面"
+        ],
+        "$__mpe_code": {
+            "position": {
+                "x": 8730,
+                "y": 1470
             }
         }
     }
