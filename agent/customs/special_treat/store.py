@@ -246,14 +246,13 @@ class BuyStamina(CustomAction):
             name, entry, single = self.ITEMS[key]
             nodes = self.RED_NODES if key == "red" else self.PURPLE_NODES
 
-            # 红糖购买每轮只允许一次：第二遍装备刷取回到这里时直接放手，避免自激
+            # 红糖购买每轮只允许一次：再次进入时按未购买处理，避免反复回到刷取流程
             if key == "red":
                 counter = CounterManager.get(self.PASS_KEY, self.MAX_PASS, 0)
                 if counter.count() < 0:
                     Prompter.log("跳过购买红糖，本轮已买")
-                    # 本轮已经买到过糖（例如开局补糖），这正是该继续刷第二遍装备的时候，
-                    # 因此这里是「无需重复购买」而不是失败，返回成功让链路继续。
-                    return True
+                    # 严格模式下只有实际购买才允许回到刷取流程，否则由 on_error 收尾。
+                    return not strict
 
             if not isinstance(count, int) or count <= 0:
                 Prompter.log(f"{name}未设置次数，跳过购买")
