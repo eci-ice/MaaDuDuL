@@ -148,7 +148,7 @@ class SpecialBuy(CustomAction):
                             },
                         },
                     )
-                    time.sleep(0.4)
+                    time.sleep(0.6)
 
             return True
         except Exception as e:
@@ -263,9 +263,8 @@ class BuyStamina(CustomAction):
                     context, key, name, entry, nodes, single, count, strict
                 )
             finally:
-                # 紫糖购买会停在冒险页，恢复到主界面以免影响后续节点
-                if key == "purple":
-                    Tasker(context).run("返回主界面")
+                # 紫糖购买结束后会停在冒险页，后续节点直接从冒险页接着走，不再绕回主界面
+                pass
 
             # 顶部体力只有红糖那套读数口径，紫糖读的是星星糖，不能拿来对账
             if strict and key == "red" and before is not None:
@@ -392,6 +391,8 @@ class BuyStamina(CustomAction):
             return skipped, before, 0
 
         Tasker(context).run(nodes["buy"])
+        if key == "purple" and current is not None and single:
+            PurpleStaminaCheck.remember(current + single * bought)
         return True, before, bought
 
     def _read_stamina(self, context: Context) -> int | None:
@@ -769,3 +770,69 @@ class RedSupply(BuyStamina):
         Tasker(context).run(BuyStamina.RED_NODES["cancel"])
         return False
 
+@AgentServer.custom_action("purple_stamina_check")
+class PurpleStaminaCheck(CustomAction):
+    """星星糖数量检查：紫糖购买后不足门槛就结束本轮。
+
+    与红糖的「红糖不足，当前 X，结束本轮」同一口径：读数低于门槛时打一行
+    同样的提示并返回 False，由 on_error 结束本轮，不再继续后续副本内容。
+    """
+
+    NODE = "购买糖果_识别顶部体力"
+    # 购买流程里能直接算出买到后的数量，记在这里，检查节点优先用它，省一次 OCR
+    cached: int | None = None
+
+    @classmethod
+    def remember(cls, value: int | None) -> None:
+        """记录购买后的星星糖数量（None 表示没买、无值可记）。"""
+        cls.cached = value
+
+    def run(self, context: Context, argv: CustomAction.RunArg) -> bool:
+        """读取顶部星星糖数量并与门槛比较。
+
+        Args:
+            context：MaaFW 上下文对象
+            argv：自定义动作参数，min/m 为最低数量门槛，默认 10
+
+        Returns:
+            bool：达到门槛返回 True，不足返回 False
+        """
+        try:
+            args = ParamAnalyzer(argv)
+            minimum = args.get(["min", "m"], 10)
+            cached = type(self).cached
+            type(self).cached = None
+            if cached is not None:
+                if cached >= minimum:
+                    return True
+                Prompter.log(f"紫糖不足，当前 {cached}，结束本轮")
+                return False
+            text = ""
+            numbers = []
+            seen = []
+            # 先按节点的窄 roi 读，读不到再放宽到整个顶部右侧区域兜底
+            for roi in ([660, 8, 420, 64], [640, 12, 220, 56]):
+                for _ in range(4):
+                    # 必须带斜杠，避免「0/180」被读成「0180」后取错数值
+                    override = {"roi": roi, "expected": [r"\d+/\d+"]}
+                    rh = RecoHelper(context).refresh_screencap().recognize(self.NODE, override)
+                    texts = [r.text for r in rh.filtered_results] if rh.hit else []
+                    text = (rh.best_result.text if rh.hit and rh.best_result else "") or ""
+                    seen.extend(t for t in [text, *texts] if t)
+                    pairs = re.findall(r"(\d+)\s*/\s*\d+", " ".join(dict.fromkeys(seen)))
+                    numbers = [int(n) for n in pairs]
+                    if numbers:
+                        break
+                    time.sleep(0.6)
+                if numbers:
+                    break
+            if not numbers:
+                Prompter.log(f"未能读取星星糖数量（{text or '空'}），跳过数量检查")
+                return True
+            current = numbers[0]
+            if current >= minimum:
+                return True
+            Prompter.log(f"紫糖不足，当前 {current}，结束本轮")
+            return False
+        except Exception as e:
+            return Prompter.error("星星糖数量检查", e)

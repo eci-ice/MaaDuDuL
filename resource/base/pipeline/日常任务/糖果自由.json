@@ -1,0 +1,104 @@
+{
+    "糖果自由_识别奖励名称": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    745,
+                    76,
+                    230,
+                    32
+                ]
+            }
+        },
+        "$__mpe_code": {
+            "position": {
+                "x": 600,
+                "y": 0
+            }
+        }
+    },
+    "糖果自由_识别奖励数量": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    1120,
+                    76,
+                    170,
+                    32
+                ],
+                "expected": [
+                    "所持数量"
+                ]
+            }
+        },
+        "$__mpe_code": {
+            "position": {
+                "x": 600,
+                "y": 200
+            }
+        }
+    },
+    "糖果自由_识别关卡编号": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    0,
+                    90,
+                    730,
+                    620
+                ],
+                "expected": [
+                    "\\d+"
+                ]
+            }
+        },
+        "$__mpe_code": {
+            "position": {
+                "x": 6900,
+                "y": 1200
+            }
+        }
+    },
+    "清紫糖_星星糖不足": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "expected": [
+                    "无法继续恢复星星糖"
+                ]
+            }
+        },
+        "post_delay": 300,
+        "$__mpe_code": {
+            "position": {
+                "x": 6900,
+                "y": 1300
+            }
+        }
+    },
+    "糖果自由_识别选中关卡": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    740,
+                    120,
+                    90,
+                    70
+                ],
+                "expected": [
+                    "\\d+"
+                ]
+            }
+        },
+        "$__mpe_code": {
+            "position": {
+                "x": 6900,
+                "y": 1100
+            }
+        }
+    }
+}
