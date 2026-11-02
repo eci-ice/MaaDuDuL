@@ -94,12 +94,6 @@
         "recognition": {
             "type": "OCR",
             "param": {
-                "roi": [
-                    340,
-                    225,
-                    200,
-                    50
-                ],
                 "expected": [
                     "娃娃怪狩猎许可证不足",
                     "要前往商店吗"
@@ -107,19 +101,11 @@
             }
         },
         "action": {
-            "type": "Click",
-            "param": {
-                "target": [
-                    356,
-                    331,
-                    1,
-                    1
-                ]
-            }
+            "type": "DoNothing"
         },
         "post_delay": 600,
         "focus": {
-            "Node.Recognition.Succeeded": "> 入场券不足，关闭弹窗并跳过本轮速刷"
+            "Node.Recognition.Succeeded": "> 娃娃怪狩猎许可证不足，跳过本轮速刷"
         },
         "next": [
             "清红糖_从心形返回"

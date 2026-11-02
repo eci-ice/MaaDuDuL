@@ -1128,7 +1128,7 @@ class CandyFight(CustomAction):
                 return False
             if not fight_finished(detail):
                 last_node = Tasker.get_last_node_name(detail)
-                Prompter.log(f"速战没打成，最后节点 {last_node}，可能是娃娃怪狩猎许可证或入场券不足，本轮跳过")
+                Prompter.log(f"速战没打成，最后节点 {last_node}，本轮跳过")
                 return False
             return True
         except Exception as e:
