@@ -95,13 +95,14 @@
             "type": "OCR",
             "param": {
                 "roi": [
-                    555,
-                    125,
-                    190,
-                    55
+                    340,
+                    225,
+                    200,
+                    50
                 ],
                 "expected": [
-                    "入场券不足"
+                    "娃娃怪狩猎许可证不足",
+                    "要前往商店吗"
                 ]
             }
         },
@@ -109,8 +110,8 @@
             "type": "Click",
             "param": {
                 "target": [
-                    533,
-                    553,
+                    356,
+                    331,
                     1,
                     1
                 ]
@@ -118,10 +119,10 @@
         },
         "post_delay": 600,
         "focus": {
-            "Node.Recognition.Succeeded": "> 入场券不足，关闭弹窗并结束本轮"
+            "Node.Recognition.Succeeded": "> 入场券不足，关闭弹窗并跳过本轮速刷"
         },
         "next": [
-            "返回主界面"
+            "清红糖_从心形返回"
         ],
         "$__mpe_code": {
             "position": {

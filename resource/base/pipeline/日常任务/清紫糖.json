@@ -770,6 +770,71 @@
             }
         }
     },
+    "清紫糖_糖果自由自动检查": {
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "periodic_check",
+                "custom_action_param": "k=糖果自由"
+            }
+        },
+        "focus": {
+            "Node.Action.Starting": "> 检查今日是否已自动刷取棉花糖"
+        },
+        "next": [
+            "清紫糖_糖果自由自动"
+        ],
+        "on_error": [
+            "清紫糖_副本周期记录"
+        ],
+        "$__mpe_code": {
+            "position": {
+                "x": 7000,
+                "y": 2500
+            }
+        }
+    },
+    "清紫糖_糖果自由自动": {
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "cotton_auto"
+            }
+        },
+        "focus": {
+            "Node.Action.Starting": "> 自动选择棉花糖组合"
+        },
+        "next": [
+            "清紫糖_糖果自由自动记录"
+        ],
+        "on_error": [
+            "清紫糖_副本周期记录"
+        ],
+        "$__mpe_code": {
+            "position": {
+                "x": 7300,
+                "y": 2500
+            }
+        }
+    },
+    "清紫糖_糖果自由自动记录": {
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "record_period",
+                "custom_action_param": "k=糖果自由"
+            }
+        },
+        "next": [
+            "清紫糖_副本周期记录"
+        ],
+        "$__mpe_code": {
+            "position": {
+                "x": 7600,
+                "y": 2500
+            }
+        }
+    },
     "清紫糖_确保进入金币大作战": {
         "action": {
             "type": "Click",

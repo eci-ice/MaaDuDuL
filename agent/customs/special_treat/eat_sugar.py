@@ -1060,6 +1060,25 @@ def plan_fights(context: Context) -> tuple[bool, int | None]:
     return True, fights
 
 
+# 速战可能的正常收尾节点：跳过动画 / 领取奖励 / 等级提升
+FIGHT_DONE_NODES = ("速战_确认奖励", "速战_等级提升", "速战_跳过动画")
+
+
+def fight_finished(detail) -> bool:
+    """判断一次速战是否走到了正常收尾节点。
+
+    速战有几条「打不了」的出口（入场券不足、关卡不可用、挨饿），
+    它们同样会让任务正常返回，所以不能只看任务有没有抛异常。
+
+    Args:
+        detail：Tasker.run 返回的任务详情
+
+    Returns:
+        bool：走到了正常收尾节点返回 True
+    """
+    return Tasker.get_last_node_name(detail) in FIGHT_DONE_NODES
+
+
 def run_candy_fight(context: Context):
     """用我们自己的 next 覆盖发起一次速战。
 
@@ -1088,7 +1107,8 @@ def run_candy_fight(context: Context):
 class CandyFight(CustomAction):
     """红糖速战包装自定义动作类。
 
-    以我们自己的 next 覆盖发起速战，候选里包含入场券不足、饥饿提示与补糖。
+    以我们自己的 next 覆盖发起速战，候选里包含入场券不足、饥饿提示与补糖；
+    只有真的打完（走到速战收尾节点）才算成功，打不了时返回 False 交给 on_error。
     """
 
     def run(self, context: Context, argv: CustomAction.RunArg) -> bool:
@@ -1099,10 +1119,18 @@ class CandyFight(CustomAction):
             argv：自定义动作参数（本动作无需额外参数）
 
         Returns:
-            bool：速战流程执行完毕返回 True
+            bool：正常打完并领到奖励返回 True
         """
         try:
-            return run_candy_fight(context) is not None
+            detail = run_candy_fight(context)
+            if detail is None:
+                Prompter.log("预留体力不足，跳过本次速战")
+                return False
+            if not fight_finished(detail):
+                last_node = Tasker.get_last_node_name(detail)
+                Prompter.log(f"速战没打成，最后节点 {last_node}，可能是娃娃怪狩猎许可证或入场券不足，本轮跳过")
+                return False
+            return True
         except Exception as e:
             return Prompter.error("红糖速战", e)
 
