@@ -135,6 +135,16 @@
 						}
 					},
 					"label": "$秘灵"
+				},
+				{
+					"name": "自动选择",
+					"pipeline_override": {
+						"清红糖_选择心形种族": {
+							"custom_action_param": "t=auto"
+						}
+					},
+					"label": "$自动选择",
+					"description": "$自动选择会识别八个入口底部的数量，进入数量最少的那个"
 				}
 			]
 		},

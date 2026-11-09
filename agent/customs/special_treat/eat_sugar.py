@@ -373,8 +373,87 @@ class SelectHeartType(CustomAction):
     """选择心形关卡类型的自定义动作。
 
     根据参数指定的心形关卡类型，点击对应的关卡入口坐标。
-    支持的心形关卡类型：龙族、精灵、幽灵、仙灵、魔女、自然灵、兽人、秘灵。
+    支持的心形关卡类型：龙族、精灵、幽灵、仙灵、魔女、自然灵、兽人、秘灵，
+    以及 auto（识别各入口底部数量，进数量最少的那个）。
+
+    参数格式：
+        - type 或 t：关卡类型，auto 表示自动挑数量最少的入口
     """
+
+    # 「娃娃怪破坏者」八个入口的点击坐标（1280 基准）
+    TYPES = {
+        "龙族": [408, 168],
+        "精灵": [638, 185],
+        "幽灵": [883, 171],
+        "仙灵": [662, 341],
+        "魔女": [900, 323],
+        "自然灵": [381, 463],
+        "兽人": [868, 488],
+        "秘灵": [642, 490],
+    }
+
+    # 各入口底部「图标 + 数量」的识别区域（1280 基准，实测于 1.5.6）
+    COUNT_ROIS = {
+        "龙族": [360, 190, 110, 45],
+        "精灵": [605, 208, 110, 42],
+        "幽灵": [850, 208, 110, 42],
+        "仙灵": [620, 362, 120, 42],
+        "魔女": [880, 362, 120, 42],
+        "自然灵": [345, 537, 110, 42],
+        "秘灵": [615, 535, 110, 50],
+        "兽人": [855, 547, 110, 42],
+    }
+
+    # 读数量用的识别节点（OCR，不限制 expected，代码里自己抽数字）
+    COUNT_NODE = "清红糖_识别心形数量"
+    # 自动选择失败时的兜底类型
+    DEFAULT_TYPE = "魔女"
+    # 最近一次选中的模式名：速战不可用时用来点名（如「从没推过秘灵模式哦」）
+    last_type = ""
+
+    def _read_counts(self, context: Context) -> dict[str, int]:
+        """读八个入口底部数量。
+
+        Args:
+            context：MaaFramework 上下文对象
+
+        Returns:
+            dict：{类型: 数量}，读不到的记为 -1
+        """
+        counts: dict[str, int] = {}
+        for level, roi in self.COUNT_ROIS.items():
+            try:
+                rh = RecoHelper(context).refresh_screencap()
+                rh.recognize(self.COUNT_NODE, {"roi": roi})
+                text = rh.concat() or ""
+                digits = "".join(ch for ch in text if ch.isdigit())
+                counts[level] = int(digits) if digits else -1
+            except Exception:
+                counts[level] = -1
+        return counts
+
+    def _pick_least(self, context: Context) -> str:
+        """挑数量最少的入口；读不到的一律排除，0 视为有效最小值。
+
+        Args:
+            context：MaaFramework 上下文对象
+
+        Returns:
+            str：选中的类型名，全部读不到时返回空串
+        """
+        counts = self._read_counts(context)
+        shown = " / ".join(
+            f"{level} {value if value >= 0 else '未读到'}" for level, value in counts.items()
+        )
+        Prompter.log(f"心形数量 {shown}")
+
+        candidates = [(value, level) for level, value in counts.items() if value >= 0]
+        if not candidates:
+            Prompter.log("心形数量都没读到，按魔女继续")
+            return ""
+        value, level = min(candidates)
+        Prompter.log(f"选择数量最少的 {level}（{value}）")
+        return level
 
     def run(self, context: Context, argv: CustomAction.RunArg) -> bool:
         """执行选择心形关卡类型的操作。
@@ -393,27 +472,15 @@ class SelectHeartType(CustomAction):
             args = ParamAnalyzer(argv)
             level: str = args.get(["type", "t"])
 
-            # 根据关卡类型确定点击坐标
-            target = [408, 168]
-            if level == "龙族":
-                target = [408, 168]
-            elif level == "精灵":
-                target = [638, 185]
-            elif level == "幽灵":
-                target = [883, 171]
-            elif level == "仙灵":
-                target = [662, 341]
-            elif level == "魔女":
-                target = [900, 323]
-            elif level == "自然灵":
-                target = [381, 463]
-            elif level == "兽人":
-                target = [868, 488]
-            elif level == "秘灵":
-                target = [642, 490]
-            else:
+            # auto：先识别八个入口底部的数量，进最少的那个
+            if level == "auto":
+                level = self._pick_least(context) or self.DEFAULT_TYPE
+
+            target = self.TYPES.get(level)
+            if not target:
                 Prompter.error("无效的心形关卡类型")
                 return False
+            SelectHeartType.last_type = level
             Tasker(context).click(*target)
 
             return True
@@ -728,6 +795,7 @@ STAMINA_FALLBACK_ROIS = ([590, 26, 130, 34], [700, 22, 160, 44])
 FIGHT_OVERRIDE = {
     "速战_打开速战面板": {
         "next": [
+            "速战_未通关",
             "速战_确保可战斗",
             "清红糖_入场券不足",
             "速战_无法速战",
@@ -1203,6 +1271,7 @@ FIGHT_DONE_NODES = ("速战_确认奖励", "速战_等级提升", "速战_跳过
 
 # 这些失败出口自己已经打过原因，收尾判定不再补一句，避免前端重复
 FIGHT_LOGGED_EXITS = (
+    "速战_未通关",
     "清红糖_入场券不足",
     "清红糖_饥饿提示",
     "速战_无法速战",
@@ -1277,6 +1346,13 @@ class CandyFight(CustomAction):
                 return False
             if not fight_finished(detail):
                 last_node = Tasker.get_last_node_name(detail)
+                if last_node == "速战_未通关":
+                    mode = SelectHeartType.last_type
+                    if mode:
+                        Prompter.log(f"从没推过{mode}模式哦，再练练吧")
+                    else:
+                        Prompter.log("还没通关过，速战用不了，本轮跳过")
+                    return False
                 if last_node not in FIGHT_LOGGED_EXITS:
                     Prompter.log(f"速战没打成，最后节点 {last_node}，本轮跳过")
                 return False
