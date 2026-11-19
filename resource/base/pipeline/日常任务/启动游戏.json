@@ -98,6 +98,7 @@
             "Node.Action.Succeeded": "> 尝试识别关键界面"
         },
         "next": [
+            "启动游戏_重试闸门",
             "启动游戏_连续识别主界面",
             "启动游戏_连续识别开始界面",
             "[JumpBack]启动游戏_检测公告界面",
@@ -127,7 +128,7 @@
         },
         "post_delay": 0,
         "next": [
-            "启动游戏_启动游戏"
+            "启动游戏_初始化重试"
         ],
         "$__mpe_code": {
             "position": {
@@ -475,6 +476,57 @@
             "position": {
                 "x": 1219,
                 "y": 631
+            }
+        }
+    },
+    "启动游戏_初始化重试": {
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "init_counter",
+                "custom_action_param": "k=启动游戏重试&ic=0&mc=31"
+            }
+        },
+        "next": [
+            "启动游戏_启动游戏"
+        ],
+        "$__mpe_code": {
+            "position": {
+                "x": 139,
+                "y": 183
+            }
+        }
+    },
+    "启动游戏_重试闸门": {
+        "recognition": {
+            "type": "Custom",
+            "param": {
+                "custom_recognition": "retry_gate",
+                "custom_recognition_param": "k=启动游戏重试&m=30"
+            }
+        },
+        "next": [
+            "启动游戏_启动失败"
+        ],
+        "$__mpe_code": {
+            "position": {
+                "x": 139,
+                "y": 320
+            }
+        }
+    },
+    "启动游戏_启动失败": {
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "abort_with_message",
+                "custom_action_param": "m=启动游戏已重试到上限，仍未进入游戏，本次任务中止"
+            }
+        },
+        "$__mpe_code": {
+            "position": {
+                "x": 139,
+                "y": 460
             }
         }
     }

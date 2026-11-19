@@ -12,6 +12,7 @@ OCR 也常把繁体字识别成简体（如「活動视窗」）。本模块把�
 
 import json
 import re
+import time
 from collections.abc import Iterable
 from pathlib import Path
 from typing import Any
@@ -85,6 +86,12 @@ TERMS: dict[str, str] = {
     # 棉花糖档位：国服「初级/中级/优质」在国际服是「下等/中等/上等」
     "优质": "上等",
 }
+
+# 是否加载了 zh_hant 覆盖层：带有效期缓存，避免每次识别都查一遍标识节点
+_MARKER_AT = 0.0
+_MARKER_VALUE = False
+_MARKER_TTL = 30.0
+
 
 _TERMS_RE = re.compile("|".join(sorted(map(re.escape, TERMS), key=len, reverse=True)))
 
@@ -205,7 +212,25 @@ def _convert(value: Any) -> Any:
 
 
 def _zh_hant_loaded(context: Any) -> bool:
-    try:
-        return bool(context.tasker.resource.get_node_data(MARKER_NODE))
-    except Exception:
-        return False
+    """判断当前是否加载了 zh_hant 覆盖层。
+
+    识别与子任务调用频繁，而国服没有这个标识节点时每次查询都会在框架侧打印一条
+    `MaaResourceGetNodeData failed`；这里按 30 秒有效期缓存结果，既不再刷屏，
+    切资源（国服 ↔ 繁中）后也能很快生效。
+
+    Args:
+        context: MaaFramework 的 Context 对象。
+
+    Returns:
+        bool: 加载了 zh_hant 覆盖层返回 True。
+    """
+    global _MARKER_AT, _MARKER_VALUE
+    now = time.monotonic()
+    if now - _MARKER_AT > _MARKER_TTL:
+        try:
+            _MARKER_VALUE = bool(context.tasker.resource.get_node_data(MARKER_NODE))
+        except Exception:
+            _MARKER_VALUE = False
+        _MARKER_AT = now
+    return _MARKER_VALUE
+

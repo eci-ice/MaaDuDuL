@@ -8,7 +8,7 @@ from maa.custom_action import CustomAction
 from maa.custom_recognition import CustomRecognition
 from maa.context import Context
 
-from agent.customs.utils import Prompter
+from agent.customs.utils import CounterManager, Prompter
 from agent.customs.maahelper import RecoHelper, ParamAnalyzer, Tasker
 
 
@@ -25,6 +25,71 @@ def home_start(context: Context):
 
 
 hook_handler = {"hs": home_start}
+
+
+# ====================  启动游戏  ====================
+
+
+@AgentServer.custom_recognition("retry_gate")
+class RetryGate(CustomRecognition):
+    """重试闸门：每被评估一次就计一次数，超过上限时命中。
+
+    节点被框架反复重试时，动作不一定每次都执行（实测 5 分钟里动作只跑了 3 次、
+    节点却被访问了 765 次），所以把「重试次数」记在识别里，用它给循环封顶。
+    """
+
+    def analyze(
+        self,
+        context: Context,
+        argv: CustomRecognition.AnalyzeArg,
+    ) -> CustomRecognition.AnalyzeResult:
+        """计一次数；超过上限时返回识别成功。
+
+        参数：
+            context：MAA 上下文对象
+            argv：分析参数，支持以下字段：
+                - key/k：计数器键名
+                - max/m：允许的最大次数，默认 6
+
+        返回：
+            CustomRecognition.AnalyzeResult：超限时命中，否则无结果
+        """
+        try:
+            args = ParamAnalyzer(argv)
+            key = args.get(["key", "k"], "default")
+            limit = args.get(["max", "m"], 6)
+            if not isinstance(limit, int) or limit <= 0:
+                limit = 6
+
+            counter = CounterManager.get(key, max_count=limit)
+            if counter.cur_count > limit:
+                return RecoHelper.rt()
+            counter.count()
+            return RecoHelper.NoResult
+        except Exception as e:
+            return Prompter.error("重试闸门", e, reco_detail=True)
+
+
+@AgentServer.custom_action("abort_with_message")
+class AbortWithMessage(CustomAction):
+    """打印一条提示并让节点失败，把死循环收敛成一次可见的任务失败。"""
+
+    def run(self, context: Context, argv: CustomAction.RunArg) -> bool:
+        """输出提示并返回 False。
+
+        参数：
+            context：MAA 上下文对象
+            argv：运行参数，支持以下字段：
+                - msg/m：提示文本
+
+        返回：
+            bool：固定返回 False
+        """
+        args = ParamAnalyzer(argv)
+        Prompter.log(args.get(["msg", "m"], "重试次数已达上限，本次任务中止"))
+        return False
+
+
 
 
 # ====================  任务启动监听  ====================
